@@ -348,12 +348,12 @@
     markReadBtn.className = 'pcf-mark-read-btn';
     markReadBtn.textContent = 'Mark as Read';
 
-    // Use both mousedown and click for better reliability
+    // Handle the actual mark as read action
     const handleMarkRead = function(e) {
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
-
+      
       console.log('Mark as read clicked for thread:', threadId);
 
       addViewedListing(threadId);
@@ -370,8 +370,20 @@
       return false;
     };
 
-    markReadBtn.addEventListener('mousedown', handleMarkRead, true);
+    // Prevent propagation on all events
+    const stopPropagation = function(e) {
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+    };
+
+    // Prevent touchstart and touchmove from propagating (but don't prevent default)
+    markReadBtn.addEventListener('touchstart', stopPropagation, true);
+    markReadBtn.addEventListener('touchmove', stopPropagation, true);
+    
+    // Add the actual handler on touchend (for mobile) and click (for desktop)
+    markReadBtn.addEventListener('touchend', handleMarkRead, true);
     markReadBtn.addEventListener('click', handleMarkRead, true);
+    
     previewContainer.appendChild(markReadBtn);
 
     mainCell.appendChild(previewContainer);
