@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Simple Dark Mode
+// @name         Simple Dark Mode (Invert)
 // @namespace    http://tampermonkey.net/
-// @version      1.0
-// @description  Apply dark mode to websites that don't have it
+// @version      2.0
+// @description  Apply dark mode to websites using color inversion
 // @author       You
 // @match        *://*/*
 // @grant        none
@@ -33,7 +33,7 @@
     return false;
   }
 
-  // Apply dark mode styles
+  // Apply dark mode using invert filter
   function applyDarkMode() {
     if (isDarkMode()) {
       console.log('Dark mode already detected, skipping...');
@@ -41,62 +41,27 @@
     }
 
     const style = document.createElement('style');
-    style.id = 'simple-dark-mode';
+    style.id = 'simple-dark-mode-invert';
     style.textContent = `
       html {
-        background-color: #1a1a1a !important;
+        filter: invert(1) hue-rotate(180deg);
+        background-color: #fff;
       }
       
-      body {
-        background-color: #1a1a1a !important;
-        color: #e0e0e0 !important;
+      /* Invert images and videos back to normal */
+      img, video, iframe, canvas, svg,
+      [style*="background-image"] {
+        filter: invert(1) hue-rotate(180deg);
       }
       
-      * {
-        background-color: inherit !important;
-        color: inherit !important;
-        border-color: #444 !important;
-      }
-      
-      a {
-        color: #6db3f2 !important;
-      }
-      
-      a:visited {
-        color: #a78bd6 !important;
-      }
-      
-      input, textarea, select, button {
-        background-color: #2a2a2a !important;
-        color: #e0e0e0 !important;
-        border: 1px solid #444 !important;
-      }
-      
-      img, video, iframe {
-        opacity: 0.9;
-        filter: brightness(0.9);
-      }
-      
-      code, pre {
-        background-color: #2a2a2a !important;
-        color: #f0f0f0 !important;
-      }
-      
-      ::placeholder {
-        color: #888 !important;
-      }
-      
-      ::-webkit-scrollbar {
-        background-color: #2a2a2a !important;
-      }
-      
-      ::-webkit-scrollbar-thumb {
-        background-color: #555 !important;
+      /* Handle background images */
+      *[style*="background-image"] {
+        filter: invert(1) hue-rotate(180deg);
       }
     `;
 
     document.head.appendChild(style);
-    console.log('Dark mode applied!');
+    console.log('Dark mode (invert) applied!');
   }
 
   // Wait for page to load
