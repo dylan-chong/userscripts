@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PokerChipForum Viewed Listings Tracker
 // @namespace    http://tampermonkey.net/
-// @version      2.3
+// @version      2.4
 // @description  Grey out viewed listings on PokerChipForum marketplace with image previews
 // @author       You
 // @match        https://www.pokerchipforum.com/*
@@ -117,6 +117,7 @@
         border: 1px solid #ddd;
         vertical-align: top;
         object-fit: contain;
+        cursor: pointer;
       }
       
       .pcf-preview-placeholder {
@@ -192,19 +193,22 @@
     return match ? match[1] : null;
   }
 
-  // Get full-size image URL from thumbnail
-  function getFullSizeUrl(imgSrc, imgElement) {
-    // Check if image is wrapped in a link
+  // Get full-size image URL from thumbnail or parent link
+  function getFullSizeUrl(imgElement) {
+    // First priority: Check if image is wrapped in a link (XenForo lightbox pattern)
     const parentLink = imgElement.closest('a[href]');
     if (parentLink) {
       const linkHref = parentLink.getAttribute('href');
-      // If link points to an image, use that
-      if (linkHref && /\.(jpg|jpeg|png|gif|webp)$/i.test(linkHref)) {
+      // If link points to an image or attachment, use that (this is the full-size version)
+      if (linkHref && (/\.(jpg|jpeg|png|gif|webp)$/i.test(linkHref) || linkHref.includes('/attachments/'))) {
         return linkHref.startsWith('/') ? 'https://www.pokerchipforum.com' + linkHref : linkHref;
       }
     }
 
-    // Common thumbnail patterns in XenForo and forums
+    // Fallback: try to extract full-size from the img src itself
+    let imgSrc = imgElement.getAttribute('src');
+    if (!imgSrc) return null;
+
     let fullUrl = imgSrc;
 
     // Remove thumbnail size parameters
@@ -212,10 +216,10 @@
     fullUrl = fullUrl.replace(/\?thumbnail=\d+/, '');
     fullUrl = fullUrl.replace(/&thumbnail=\d+/, '');
 
-    // XenForo attachment format: attachments/xxx.123/ to attachments/xxx.123/full
+    // XenForo attachment format: attachments/xxx.123/ to attachments/xxx.123/
     if (fullUrl.includes('/attachments/')) {
       fullUrl = fullUrl.replace(/\/attachments\/([^\/]+\.\d+)\/.*$/, '/attachments/$1/');
-      // Try adding 'full' parameter if not already there
+      // Add full parameter if not already there
       if (!fullUrl.includes('?')) {
         fullUrl += '?full=1';
       }
@@ -287,8 +291,10 @@
             continue;
           }
 
-          // Get full-size version
-          let imageSrc = getFullSizeUrl(src, img);
+          // Get full-size version (prioritizes parent link href for XenForo lightbox)
+          let imageSrc = getFullSizeUrl(img);
+          if (!imageSrc) continue;
+          
           if (imageSrc.startsWith('/')) {
             imageSrc = 'https://www.pokerchipforum.com' + imageSrc;
           }
