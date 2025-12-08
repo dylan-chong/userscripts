@@ -49,7 +49,7 @@
       }
       
       /* Invert images and videos back to normal */
-      img, video, iframe, canvas, svg,
+      img, video, svg,
       [style*="background-image"] {
         filter: invert(1) hue-rotate(180deg);
       }
