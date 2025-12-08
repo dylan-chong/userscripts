@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PokerChipForum Viewed Listings Tracker
 // @namespace    http://tampermonkey.net/
-// @version      2.2
+// @version      2.3
 // @description  Grey out viewed listings on PokerChipForum marketplace with image previews
 // @author       You
 // @match        https://www.pokerchipforum.com/*
@@ -116,6 +116,7 @@
         border-radius: 4px;
         border: 1px solid #ddd;
         vertical-align: top;
+        object-fit: contain;
       }
       
       .pcf-preview-placeholder {
