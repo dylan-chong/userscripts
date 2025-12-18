@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Simple Dark Mode (Invert)
 // @namespace    http://tampermonkey.net/
-// @version      2.2
+// @version      2.3
 // @description  Apply dark mode to websites using color inversion with toggles
 // @author       You
 // @match        *://*/*
@@ -14,6 +14,40 @@
   let imagesInverted = true;
   let darkModeEnabled = true;
   let darkModeStyle = null;
+  const domain = window.location.hostname;
+
+  function getStorageKey(setting) {
+    return `darkmode_${domain}_${setting}`;
+  }
+
+  function saveSettings() {
+    try {
+      localStorage.setItem(getStorageKey('darkModeEnabled'), darkModeEnabled);
+      localStorage.setItem(getStorageKey('imagesInverted'), imagesInverted);
+      console.log('Settings saved for', domain);
+    } catch (e) {
+      console.error('Failed to save settings:', e);
+    }
+  }
+
+  function loadSettings() {
+    try {
+      const savedDarkMode = localStorage.getItem(getStorageKey('darkModeEnabled'));
+      const savedImagesInverted = localStorage.getItem(getStorageKey('imagesInverted'));
+      
+      if (savedDarkMode !== null) {
+        darkModeEnabled = savedDarkMode === 'true';
+        console.log('Loaded darkModeEnabled:', darkModeEnabled);
+      }
+      
+      if (savedImagesInverted !== null) {
+        imagesInverted = savedImagesInverted === 'true';
+        console.log('Loaded imagesInverted:', imagesInverted);
+      }
+    } catch (e) {
+      console.error('Failed to load settings:', e);
+    }
+  }
 
   function isDarkMode() {
     const body = document.body;
@@ -40,10 +74,15 @@
     return false;
   }
 
-  function applyDarkMode() {
-    if (isDarkMode()) {
-      console.log('Dark mode already detected, skipping...');
-      return;
+  function applyDarkMode(force = false) {
+    if (!force) {
+      const alreadyDark = isDarkMode();
+      
+      if (alreadyDark) {
+        console.log('Dark mode already detected, skipping...');
+        darkModeEnabled = false;
+        return;
+      }
     }
 
     if (!darkModeStyle) {
@@ -114,6 +153,7 @@
       z-index: 999999;
       box-shadow: 0 2px 10px rgba(0,0,0,0.3);
       transition: all 0.2s ease;
+      opacity: ${imagesInverted ? '1' : '0.5'};
     `;
 
     button.addEventListener('mouseenter', () => {
@@ -128,6 +168,7 @@
       imagesInverted = !imagesInverted;
       updateImageInversion(imageStyle);
       button.style.opacity = imagesInverted ? '1' : '0.5';
+      saveSettings();
     });
 
     document.body.appendChild(button);
@@ -154,6 +195,7 @@
       z-index: 999999;
       box-shadow: 0 2px 10px rgba(0,0,0,0.3);
       transition: all 0.2s ease;
+      opacity: ${darkModeEnabled ? '1' : '0.5'};
     `;
 
     button.addEventListener('mouseenter', () => {
@@ -167,11 +209,12 @@
     button.addEventListener('click', () => {
       darkModeEnabled = !darkModeEnabled;
       if (darkModeEnabled) {
-        applyDarkMode();
+        applyDarkMode(true);
       } else {
         removeDarkMode();
       }
       button.style.opacity = darkModeEnabled ? '1' : '0.5';
+      saveSettings();
     });
 
     document.body.appendChild(button);
@@ -179,25 +222,32 @@
   }
 
   function init() {
-    applyDarkMode();
+    loadSettings();
     
-    if (!isDarkMode()) {
-      const imageStyle = createImageInvertStyle();
-      updateImageInversion(imageStyle);
-      
-      if (document.body) {
-        createImageToggleButton(imageStyle);
-        createDarkModeToggleButton();
-      } else {
-        const observer = new MutationObserver(() => {
-          if (document.body) {
-            createImageToggleButton(imageStyle);
-            createDarkModeToggleButton();
-            observer.disconnect();
-          }
-        });
-        observer.observe(document.documentElement, { childList: true });
+    if (darkModeEnabled) {
+      applyDarkMode();
+    } else {
+      const alreadyDark = isDarkMode();
+      if (alreadyDark) {
+        darkModeEnabled = false;
       }
+    }
+    
+    const imageStyle = createImageInvertStyle();
+    updateImageInversion(imageStyle);
+    
+    if (document.body) {
+      createImageToggleButton(imageStyle);
+      createDarkModeToggleButton();
+    } else {
+      const observer = new MutationObserver(() => {
+        if (document.body) {
+          createImageToggleButton(imageStyle);
+          createDarkModeToggleButton();
+          observer.disconnect();
+        }
+      });
+      observer.observe(document.documentElement, { childList: true });
     }
   }
 
