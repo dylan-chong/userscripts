@@ -84,16 +84,6 @@
   }
 
   function applyDarkMode(force = false) {
-    if (!force) {
-      const alreadyDark = isDarkMode();
-      
-      if (alreadyDark) {
-        console.log('Dark mode already detected, skipping...');
-        darkModeEnabled = false;
-        return;
-      }
-    }
-
     if (!darkModeStyle) {
       darkModeStyle = document.createElement('style');
       darkModeStyle.id = 'simple-dark-mode-invert';
@@ -286,28 +276,27 @@
     return button;
   }
 
+  let hasSavedSettings = false;
+  let imageStyle = null;
+
   function init() {
     loadSettings();
     
-    if (darkModeEnabled) {
-      applyDarkMode();
-    } else {
-      const alreadyDark = isDarkMode();
-      if (alreadyDark) {
-        darkModeEnabled = false;
-      }
-    }
+    const savedDarkMode = localStorage.getItem(getStorageKey('darkModeEnabled'));
+    hasSavedSettings = savedDarkMode !== null;
     
-    const imageStyle = createImageInvertStyle();
+    if (!imageStyle) {
+      imageStyle = createImageInvertStyle();
+    }
     updateImageInversion(imageStyle);
     
-    if (document.body) {
+    if (document.body && allButtons.length === 0) {
       createImageToggleButton(imageStyle);
       createDarkModeToggleButton();
       createPositionToggleButton();
-    } else {
+    } else if (!document.body) {
       const observer = new MutationObserver(() => {
-        if (document.body) {
+        if (document.body && allButtons.length === 0) {
           createImageToggleButton(imageStyle);
           createDarkModeToggleButton();
           createPositionToggleButton();
@@ -318,12 +307,59 @@
     }
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
+  function updateButtonOpacity() {
+    const darkModeButton = document.getElementById('dark-mode-toggle');
+    if (darkModeButton) {
+      darkModeButton.style.opacity = darkModeEnabled ? '1' : '0.5';
+    }
   }
 
-  setTimeout(init, 500);
+  function checkAndApplyDarkMode() {
+    if (hasSavedSettings) {
+      if (darkModeEnabled) {
+        applyDarkMode(true);
+      } else {
+        removeDarkMode();
+      }
+    } else {
+      const alreadyDark = isDarkMode();
+      if (alreadyDark && darkModeEnabled) {
+        darkModeEnabled = false;
+        removeDarkMode();
+      } else if (!alreadyDark && !darkModeEnabled) {
+        darkModeEnabled = true;
+        applyDarkMode(true);
+      } else if (darkModeEnabled) {
+        applyDarkMode(true);
+      } else {
+        removeDarkMode();
+      }
+    }
+    updateButtonOpacity();
+  }
+
+  function startPeriodicChecking() {
+    const startTime = Date.now();
+    let pageReadyTime = null;
+
+    const checkInterval = setInterval(() => {
+      const currentTime = Date.now();
+      
+      if (document.readyState === 'complete' && pageReadyTime === null) {
+        pageReadyTime = currentTime;
+      }
+      
+      checkAndApplyDarkMode();
+      
+      if (pageReadyTime !== null && currentTime - pageReadyTime >= 500) {
+        clearInterval(checkInterval);
+        console.log('Periodic dark mode checking complete');
+      }
+    }, 100);
+  }
+
+  init();
+  checkAndApplyDarkMode();
+  startPeriodicChecking();
 
 })();
