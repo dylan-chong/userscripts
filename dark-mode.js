@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Simple Dark Mode (Invert)
 // @namespace    http://tampermonkey.net/
-// @version      2.3
+// @version      2.4
 // @description  Apply dark mode to websites using color inversion with toggles
 // @author       You
 // @match        *://*/*
@@ -13,8 +13,10 @@
 
   let imagesInverted = true;
   let darkModeEnabled = true;
+  let buttonsOnRight = true;
   let darkModeStyle = null;
   const domain = window.location.hostname;
+  let allButtons = [];
 
   function getStorageKey(setting) {
     return `darkmode_${domain}_${setting}`;
@@ -24,6 +26,7 @@
     try {
       localStorage.setItem(getStorageKey('darkModeEnabled'), darkModeEnabled);
       localStorage.setItem(getStorageKey('imagesInverted'), imagesInverted);
+      localStorage.setItem(getStorageKey('buttonsOnRight'), buttonsOnRight);
       console.log('Settings saved for', domain);
     } catch (e) {
       console.error('Failed to save settings:', e);
@@ -34,6 +37,7 @@
     try {
       const savedDarkMode = localStorage.getItem(getStorageKey('darkModeEnabled'));
       const savedImagesInverted = localStorage.getItem(getStorageKey('imagesInverted'));
+      const savedButtonsOnRight = localStorage.getItem(getStorageKey('buttonsOnRight'));
       
       if (savedDarkMode !== null) {
         darkModeEnabled = savedDarkMode === 'true';
@@ -43,6 +47,11 @@
       if (savedImagesInverted !== null) {
         imagesInverted = savedImagesInverted === 'true';
         console.log('Loaded imagesInverted:', imagesInverted);
+      }
+      
+      if (savedButtonsOnRight !== null) {
+        buttonsOnRight = savedButtonsOnRight === 'true';
+        console.log('Loaded buttonsOnRight:', buttonsOnRight);
       }
     } catch (e) {
       console.error('Failed to load settings:', e);
@@ -133,6 +142,18 @@
     }
   }
 
+  function updateButtonPositions() {
+    allButtons.forEach(button => {
+      if (buttonsOnRight) {
+        button.style.right = '20px';
+        button.style.left = 'auto';
+      } else {
+        button.style.left = '20px';
+        button.style.right = 'auto';
+      }
+    });
+  }
+
   function createImageToggleButton(imageStyle) {
     const button = document.createElement('button');
     button.id = 'dark-mode-image-toggle';
@@ -141,7 +162,7 @@
     button.style.cssText = `
       position: fixed;
       bottom: 20px;
-      right: 20px;
+      ${buttonsOnRight ? 'right: 20px;' : 'left: 20px;'}
       width: 40px;
       height: 40px;
       border-radius: 50%;
@@ -172,6 +193,7 @@
     });
 
     document.body.appendChild(button);
+    allButtons.push(button);
     return button;
   }
 
@@ -183,7 +205,7 @@
     button.style.cssText = `
       position: fixed;
       bottom: 70px;
-      right: 20px;
+      ${buttonsOnRight ? 'right: 20px;' : 'left: 20px;'}
       width: 40px;
       height: 40px;
       border-radius: 50%;
@@ -218,6 +240,49 @@
     });
 
     document.body.appendChild(button);
+    allButtons.push(button);
+    return button;
+  }
+
+  function createPositionToggleButton() {
+    const button = document.createElement('button');
+    button.id = 'dark-mode-position-toggle';
+    button.textContent = buttonsOnRight ? '←' : '→';
+    button.title = 'Toggle button position';
+    button.style.cssText = `
+      position: fixed;
+      bottom: 120px;
+      ${buttonsOnRight ? 'right: 20px;' : 'left: 20px;'}
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid #666;
+      background-color: #333;
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      z-index: 999999;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      transition: all 0.2s ease;
+    `;
+
+    button.addEventListener('mouseenter', () => {
+      button.style.transform = 'scale(1.1)';
+    });
+
+    button.addEventListener('mouseleave', () => {
+      button.style.transform = 'scale(1)';
+    });
+
+    button.addEventListener('click', () => {
+      buttonsOnRight = !buttonsOnRight;
+      button.textContent = buttonsOnRight ? '←' : '→';
+      updateButtonPositions();
+      saveSettings();
+    });
+
+    document.body.appendChild(button);
+    allButtons.push(button);
     return button;
   }
 
@@ -239,11 +304,13 @@
     if (document.body) {
       createImageToggleButton(imageStyle);
       createDarkModeToggleButton();
+      createPositionToggleButton();
     } else {
       const observer = new MutationObserver(() => {
         if (document.body) {
           createImageToggleButton(imageStyle);
           createDarkModeToggleButton();
+          createPositionToggleButton();
           observer.disconnect();
         }
       });
