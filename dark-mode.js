@@ -54,15 +54,37 @@
     }
   }
 
+  let _colorCtx;
+  function getColorCtx() {
+    if (!_colorCtx) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1;
+      canvas.height = 1;
+      _colorCtx = canvas.getContext('2d', { willReadFrequently: true });
+    }
+    return _colorCtx;
+  }
+
   function parseRgba(color) {
-    const parts = color.match(/[\d.]+/g);
-    if (!parts || parts.length < 3) return null;
-    return {
-      r: parseInt(parts[0]),
-      g: parseInt(parts[1]),
-      b: parseInt(parts[2]),
-      a: parts.length >= 4 ? parseFloat(parts[3]) : 1,
-    };
+    if (!color || color === 'transparent') return null;
+
+    const rgbMatch = color.match(/^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:[,/\s]+([\d.]+))?\s*\)$/);
+    if (rgbMatch) {
+      return {
+        r: parseInt(rgbMatch[1]),
+        g: parseInt(rgbMatch[2]),
+        b: parseInt(rgbMatch[3]),
+        a: rgbMatch[4] !== undefined ? parseFloat(rgbMatch[4]) : 1,
+      };
+    }
+
+    const ctx = getColorCtx();
+    ctx.clearRect(0, 0, 1, 1);
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, 1, 1);
+    const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data;
+    if (a === 0) return null;
+    return { r, g, b, a: a / 255 };
   }
 
   function rgbaBrightness(rgba) {
@@ -71,13 +93,14 @@
 
   function getGradientBrightness(backgroundImage) {
     if (!backgroundImage || backgroundImage === 'none') return null;
-    const colorRegex = /rgba?\([^)]+\)/g;
-    const colors = backgroundImage.match(colorRegex);
-    if (!colors || colors.length === 0) return null;
+    const colorRegex = /\w+\([^)]+\)/g;
+    const tokens = backgroundImage.match(colorRegex);
+    if (!tokens) return null;
 
     let total = 0, count = 0;
-    for (const color of colors) {
-      const rgba = parseRgba(color);
+    for (const token of tokens) {
+      if (/^(linear|radial|conic|repeating)/.test(token)) continue;
+      const rgba = parseRgba(token);
       if (rgba && rgba.a >= 0.1) {
         total += rgbaBrightness(rgba);
         count++;
@@ -101,7 +124,25 @@
     return { el: document.documentElement, brightness: 255 };
   }
 
+  function hasDarkColorScheme() {
+    const meta = document.querySelector('meta[name="color-scheme"]');
+    if (meta && meta.content.includes('dark')) return true;
+    const rootScheme = getComputedStyle(document.documentElement).colorScheme;
+    if (rootScheme && rootScheme.includes('dark')) return true;
+    if (document.body) {
+      const bodyScheme = getComputedStyle(document.body).colorScheme;
+      if (bodyScheme && bodyScheme.includes('dark')) return true;
+    }
+    return false;
+  }
+
   function isPageDark() {
+    // const darkScheme = hasDarkColorScheme();
+    // if (darkScheme) {
+    //   console.log('[DarkMode] hasDarkColorScheme=true, skipping pixel sampling');
+    //   return true;
+    // }
+
     const samplePoints = [];
     const cols = 10;
     const rows = 5;
@@ -124,7 +165,18 @@
     });
 
     const avgBrightness = samples.reduce((sum, s) => sum + s.brightness, 0) / samples.length;
-    return avgBrightness < 128;
+    const isDark = avgBrightness < 128;
+
+    console.log(
+      `[DarkMode] avgBrightness=${avgBrightness.toFixed(1)} isDark=${isDark} samples=${samples.length}`,
+      '\n  per-sample:',
+      samples.map(s => {
+        const style = window.getComputedStyle(s.el);
+        return `(${Math.round(s.x)},${Math.round(s.y)}) brightness=${s.brightness.toFixed(1)} el=<${s.el.tagName.toLowerCase()}> bg="${style.backgroundColor}" bgImg="${style.backgroundImage.slice(0, 60)}"`;
+      }).join('\n  ')
+    );
+
+    return isDark;
   }
 
   function applyDarkMode(force = false) {
@@ -390,18 +442,10 @@
   }
 
   function startPeriodicChecking() {
-    const run = () => {
-      try {
-        checkAndApplyDarkMode();
-      } catch (e) {
-        console.error(e);
-      }
-    };
-
-    const fastInterval = setInterval(run, 1000 / 10);
+    const fastInterval = setInterval(checkAndApplyDarkMode, 1000 / 10);
     setTimeout(() => {
       clearInterval(fastInterval);
-      setInterval(run, 1000 / 4);
+      setInterval(checkAndApplyDarkMode, 1000 / 2);
     }, 10000);
   }
 
