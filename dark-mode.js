@@ -124,6 +124,7 @@
     } else {
       style.textContent = `
         img,
+        video,
         [style*="background-image"],
         *[style*="background-image"] {
           filter: invert(1) hue-rotate(180deg) !important;
@@ -148,7 +149,7 @@
     const button = document.createElement('button');
     button.id = 'dark-mode-image-toggle';
     button.textContent = '🖼️';
-    button.title = 'Toggle image inversion';
+    button.title = 'Toggle image/video inversion';
     button.style.cssText = `
       position: fixed;
       bottom: 16px;
