@@ -16,7 +16,6 @@
   let buttonsOnRight = true;
   let darkModeStyle = null;
   const domain = window.location.hostname;
-  let allButtons = [];
 
   function getStorageKey(setting) {
     return `darkmode_v2_${domain}_${setting}`;
@@ -226,60 +225,19 @@
     }
   }
 
-  function updateButtonPositions() {
-    allButtons.forEach(button => {
-      if (buttonsOnRight) {
-        button.style.right = '16px';
-        button.style.left = 'auto';
-      } else {
-        button.style.left = '16px';
-        button.style.right = 'auto';
-      }
-    });
-  }
-
-  function createImageToggleButton(imageStyle) {
-    const button = document.createElement('button');
-    button.id = 'dark-mode-image-toggle';
-    button.textContent = '🖼️';
-    button.title = 'Toggle image/video inversion';
-    button.style.cssText = `
-      position: fixed;
-      bottom: 16px;
-      ${buttonsOnRight ? 'right: 16px;' : 'left: 16px;'}
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      border: 2px solid #666;
-      background-color: #333;
-      color: #fff;
-      font-size: 16px;
-      cursor: pointer;
-      z-index: 999999;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-      transition: all 0.2s ease;
-      opacity: ${imagesInverted ? '1' : '0.5'};
-    `;
-
-    button.addEventListener('mouseenter', () => {
-      button.style.transform = 'scale(1.1)';
-    });
-
-    button.addEventListener('mouseleave', () => {
-      button.style.transform = 'scale(1)';
-    });
-
-    button.addEventListener('click', () => {
-      imagesInverted = !imagesInverted;
-      updateImageInversion(imageStyle);
-      button.style.opacity = imagesInverted ? '1' : '0.5';
-      saveSettings();
-    });
-
-    document.body.appendChild(button);
-    allButtons.push(button);
-    return button;
-  }
+  const BUTTON_STYLE = `
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid #666;
+    background-color: #333;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    z-index: 999999;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    transition: all 0.2s ease;
+  `;
 
   function getDarkModeIcon(state) {
     switch (state) {
@@ -299,117 +257,135 @@
     }
   }
 
-  function createDarkModeToggleButton() {
-    const button = document.createElement('button');
-    button.id = 'dark-mode-toggle';
-    button.textContent = getDarkModeIcon(darkModeState);
-    button.title = getDarkModeTitle(darkModeState);
-    button.style.cssText = `
-      position: fixed;
-      bottom: 56px;
-      ${buttonsOnRight ? 'right: 16px;' : 'left: 16px;'}
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      border: 2px solid #666;
-      background-color: #333;
-      color: #fff;
-      font-size: 16px;
-      cursor: pointer;
-      z-index: 999999;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-      transition: all 0.2s ease;
-    `;
-
-    button.addEventListener('mouseenter', () => {
-      button.style.transform = 'scale(1.1)';
-    });
-
-    button.addEventListener('mouseleave', () => {
-      button.style.transform = 'scale(1)';
-    });
-
-    button.addEventListener('click', () => {
-      const states = ['auto', 'off', 'on'];
-      const currentIndex = states.indexOf(darkModeState);
-      darkModeState = states[(currentIndex + 1) % 3];
-      button.textContent = getDarkModeIcon(darkModeState);
-      button.title = getDarkModeTitle(darkModeState);
-      checkAndApplyDarkMode();
-      saveSettings();
-    });
-
-    document.body.appendChild(button);
-    allButtons.push(button);
-    return button;
-  }
-
-  function createPositionToggleButton() {
-    const button = document.createElement('button');
-    button.id = 'dark-mode-position-toggle';
-    button.textContent = buttonsOnRight ? '←' : '→';
-    button.title = 'Toggle button position';
-    button.style.cssText = `
-      position: fixed;
-      bottom: 96px;
-      ${buttonsOnRight ? 'right: 16px;' : 'left: 16px;'}
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      border: 2px solid #666;
-      background-color: #333;
-      color: #fff;
-      font-size: 16px;
-      cursor: pointer;
-      z-index: 999999;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-      transition: all 0.2s ease;
-    `;
-
-    button.addEventListener('mouseenter', () => {
-      button.style.transform = 'scale(1.1)';
-    });
-
-    button.addEventListener('mouseleave', () => {
-      button.style.transform = 'scale(1)';
-    });
-
-    button.addEventListener('click', () => {
-      buttonsOnRight = !buttonsOnRight;
-      button.textContent = buttonsOnRight ? '←' : '→';
-      updateButtonPositions();
-      saveSettings();
-    });
-
-    document.body.appendChild(button);
-    allButtons.push(button);
-    return button;
-  }
-
-  let hasSavedSettings = false;
+  let menuOpen = false;
+  let menuContainer = null;
   let imageStyle = null;
 
-  function init() {
-    loadSettings();
-    
-    const savedDarkModeState = localStorage.getItem(getStorageKey('darkModeState'));
-    hasSavedSettings = savedDarkModeState !== null;
-    
+  function createMenuButton(text, title, onClick) {
+    const button = document.createElement('button');
+    button.textContent = text;
+    button.title = title;
+    button.style.cssText = BUTTON_STYLE;
+    button.addEventListener('mouseenter', () => { button.style.transform = 'translateY(0) scale(1.1)'; });
+    button.addEventListener('mouseleave', () => { button.style.transform = 'translateY(0) scale(1)'; });
+    button.addEventListener('click', onClick);
+    return button;
+  }
+
+  function getMenuLeft() {
+    return buttonsOnRight ? `calc(100vw - 52px)` : '16px';
+  }
+
+  function updateMenuPosition() {
+    if (!menuContainer) return;
+    menuContainer.style.left = getMenuLeft();
+  }
+
+  function toggleMenu() {
+    menuOpen = !menuOpen;
+    const childButtons = menuContainer.querySelectorAll('.dm-child-btn');
+    childButtons.forEach((btn, i) => {
+      if (menuOpen) {
+        btn.style.display = 'block';
+        btn.style.opacity = '0';
+        btn.style.transform = 'translateY(10px) scale(0.8)';
+        requestAnimationFrame(() => {
+          btn.style.transition = `opacity 0.2s ease ${i * 0.05}s, transform 0.2s ease ${i * 0.05}s`;
+          btn.style.opacity = btn._targetOpacity || '1';
+          btn.style.transform = 'translateY(0) scale(1)';
+        });
+      } else {
+        btn.style.transition = 'opacity 0.15s ease, transform 0.15s ease';
+        btn.style.opacity = '0';
+        btn.style.transform = 'translateY(10px) scale(0.8)';
+        setTimeout(() => { btn.style.display = 'none'; }, 150);
+      }
+    });
+  }
+
+  function createUI() {
     if (!imageStyle) {
       imageStyle = createImageInvertStyle();
     }
     updateImageInversion(imageStyle);
-    
-    if (document.body && allButtons.length === 0) {
-      createImageToggleButton(imageStyle);
-      createDarkModeToggleButton();
-      createPositionToggleButton();
-    } else if (!document.body) {
+
+    menuContainer = document.createElement('div');
+    menuContainer.id = 'dark-mode-menu';
+    menuContainer.style.cssText = `
+      position: fixed;
+      bottom: 16px;
+      left: ${getMenuLeft()};
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 8px;
+      z-index: 999999;
+      transition: left 0.3s ease;
+    `;
+
+    const mainButton = createMenuButton('⚙', 'Dark mode settings', toggleMenu);
+    menuContainer.appendChild(mainButton);
+
+    const positionButton = createMenuButton(
+      buttonsOnRight ? '←' : '→',
+      'Toggle button position',
+      () => {
+        buttonsOnRight = !buttonsOnRight;
+        positionButton.textContent = buttonsOnRight ? '←' : '→';
+        updateMenuPosition();
+        saveSettings();
+      }
+    );
+    positionButton.className = 'dm-child-btn';
+    positionButton.style.display = 'none';
+    menuContainer.appendChild(positionButton);
+
+    const darkModeButton = createMenuButton(
+      getDarkModeIcon(darkModeState),
+      getDarkModeTitle(darkModeState),
+      () => {
+        const states = ['auto', 'off', 'on'];
+        const currentIndex = states.indexOf(darkModeState);
+        darkModeState = states[(currentIndex + 1) % 3];
+        darkModeButton.textContent = getDarkModeIcon(darkModeState);
+        darkModeButton.title = getDarkModeTitle(darkModeState);
+        checkAndApplyDarkMode();
+        saveSettings();
+      }
+    );
+    darkModeButton.id = 'dark-mode-toggle';
+    darkModeButton.className = 'dm-child-btn';
+    darkModeButton.style.display = 'none';
+    menuContainer.appendChild(darkModeButton);
+
+    const imageButton = createMenuButton(
+      '🖼️',
+      'Toggle image/video inversion',
+      () => {
+        imagesInverted = !imagesInverted;
+        updateImageInversion(imageStyle);
+        imageButton._targetOpacity = imagesInverted ? '1' : '0.5';
+        imageButton.style.opacity = imageButton._targetOpacity;
+        saveSettings();
+      }
+    );
+    imageButton._targetOpacity = imagesInverted ? '1' : '0.5';
+    imageButton.style.opacity = imageButton._targetOpacity;
+    imageButton.className = 'dm-child-btn';
+    imageButton.style.display = 'none';
+    menuContainer.appendChild(imageButton);
+
+    document.body.appendChild(menuContainer);
+  }
+
+  function init() {
+    loadSettings();
+
+    if (document.body) {
+      createUI();
+    } else {
       const observer = new MutationObserver(() => {
-        if (document.body && allButtons.length === 0) {
-          createImageToggleButton(imageStyle);
-          createDarkModeToggleButton();
-          createPositionToggleButton();
+        if (document.body) {
+          createUI();
           observer.disconnect();
         }
       });
