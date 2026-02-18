@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Poker Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --felt-green: #1a4d2e;
+      --felt-dark: #0d2818;
+      --gold: #d4af37;
+      --gold-light: #f4d03f;
+      --cream: #fef9e7;
+      --chip-red: #c0392b;
+      --chip-blue: #2471a3;
+      --positive: #27ae60;
+      --negative: #e74c3c;
+      --shadow: rgba(0, 0, 0, 0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background: linear-gradient(145deg, var(--felt-dark) 0%, var(--felt-green) 50%, var(--felt-dark) 100%);
+      min-height: 100vh;
+      color: var(--cream);
+      padding: 2rem;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: 
+        radial-gradient(ellipse at 20% 80%, rgba(212, 175, 55, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(212, 175, 55, 0.08) 0%, transparent 50%),
+        repeating-linear-gradient(
+          90deg,
+          transparent 0px,
+          transparent 100px,
+          rgba(255,255,255,0.02) 100px,
+          rgba(255,255,255,0.02) 101px
+        );
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--gold);
+      text-shadow: 2px 2px 4px var(--shadow), 0 0 30px rgba(212, 175, 55, 0.3);
+      letter-spacing: 0.05em;
+    }
+
+    .subtitle {
+      color: rgba(254, 249, 231, 0.6);
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      flex: 1;
+      min-width: 120px;
+      padding: 1rem 1.5rem;
+      background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+      border: 2px solid rgba(212, 175, 55, 0.3);
+      border-radius: 8px 8px 0 0;
+      color: var(--cream);
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .tab-btn:hover {
+      background: linear-gradient(180deg, rgba(212, 175, 55, 0.2) 0%, rgba(212, 175, 55, 0.1) 100%);
+      border-color: var(--gold);
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(180deg, var(--gold) 0%, #b8960f 100%);
+      color: var(--felt-dark);
+      border-color: var(--gold);
+      box-shadow: 0 4px 20px rgba(212, 175, 55, 0.4);
+    }
+
+    .tab-content {
+      display: none;
+      background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.2) 100%);
+      border: 2px solid rgba(212, 175, 55, 0.3);
+      border-radius: 0 0 12px 12px;
+      padding: 2rem;
+      backdrop-filter: blur(10px);
+      animation: fadeIn 0.3s ease;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--gold-light);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.4);
+      border: 2px solid rgba(212, 175, 55, 0.3);
+      border-radius: 8px;
+      color: var(--cream);
+      font-family: inherit;
+      font-size: 1rem;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+    }
+
+    input::placeholder {
+      color: rgba(254, 249, 231, 0.3);
+    }
+
+    .autocomplete-btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .autocomplete-btn {
+      padding: 0.5rem 1rem;
+      background: linear-gradient(180deg, var(--chip-blue) 0%, #1a5276 100%);
+      border: none;
+      border-radius: 20px;
+      color: white;
+      font-family: inherit;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+
+    .autocomplete-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 1rem 2rem;
+      background: linear-gradient(180deg, var(--gold) 0%, #b8960f 100%);
+      border: none;
+      border-radius: 8px;
+      color: var(--felt-dark);
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(212, 175, 55, 0.5);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .table-container {
+      overflow-x: auto;
+      margin-top: 1rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      background: rgba(212, 175, 55, 0.2);
+      padding: 1rem;
+      text-align: left;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--gold-light);
+      border-bottom: 2px solid var(--gold);
+    }
+
+    td {
+      padding: 1rem;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+    }
+
+    tr:hover {
+      background: rgba(212, 175, 55, 0.05);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: rgba(254, 249, 231, 0.5);
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .cash-out-input {
+      width: 100px;
+      padding: 0.5rem;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      border-radius: 4px;
+      color: var(--cream);
+      font-family: inherit;
+      font-size: 0.9rem;
+    }
+
+    .cash-out-input:focus {
+      outline: none;
+      border-color: var(--gold);
+    }
+
+    .btn-small {
+      padding: 0.4rem 0.8rem;
+      background: linear-gradient(180deg, var(--chip-red) 0%, #922b21 100%);
+      border: none;
+      border-radius: 4px;
+      color: white;
+      font-family: inherit;
+      font-size: 0.75rem;
+      cursor: pointer;
+      margin-left: 0.5rem;
+      transition: transform 0.2s ease;
+    }
+
+    .btn-small:hover {
+      transform: scale(1.05);
+    }
+
+    .btn-save {
+      background: linear-gradient(180deg, var(--positive) 0%, #1e8449 100%);
+    }
+
+    .positive {
+      color: var(--positive);
+      font-weight: 600;
+    }
+
+    .negative {
+      color: var(--negative);
+      font-weight: 600;
+    }
+
+    .neutral {
+      color: var(--cream);
+      opacity: 0.7;
+    }
+
+    .summary-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .summary-card {
+      background: linear-gradient(135deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 100%);
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .summary-card-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: rgba(254, 249, 231, 0.6);
+      margin-bottom: 0.5rem;
+    }
+
+    .summary-card-value {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--gold);
+    }
+
+    .delete-all-btn {
+      margin-top: 2rem;
+      padding: 0.75rem 1.5rem;
+      background: transparent;
+      border: 1px solid var(--chip-red);
+      border-radius: 6px;
+      color: var(--chip-red);
+      font-family: inherit;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .delete-all-btn:hover {
+      background: var(--chip-red);
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Poker Tracker</h1>
+      <p class="subtitle">Track your table stakes</p>
+    </header>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="buy-in">Buy In</button>
+      <button class="tab-btn" data-tab="buy-in-list">Buy-In List</button>
+      <button class="tab-btn" data-tab="cash-out">Cash Out</button>
+      <button class="tab-btn" data-tab="results">Results</button>
+    </div>
+
+    <div id="buy-in" class="tab-content active">
+      <form id="buy-in-form">
+        <div class="form-group">
+          <label for="username">Player Name</label>
+          <input type="text" id="username" placeholder="Enter player name" required autocomplete="off">
+          <div id="username-autocomplete" class="autocomplete-btns"></div>
+        </div>
+        <div class="form-group">
+          <label for="amount">Buy-In Amount ($)</label>
+          <input type="number" id="amount" placeholder="Enter amount" min="0" step="0.01" required>
+          <div id="amount-autocomplete" class="autocomplete-btns"></div>
+        </div>
+        <button type="submit" class="btn-primary">Add Buy-In</button>
+      </form>
+    </div>
+
+    <div id="buy-in-list" class="tab-content">
+      <div class="summary-cards">
+        <div class="summary-card">
+          <div class="summary-card-label">Total Players</div>
+          <div class="summary-card-value" id="total-players">0</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-card-label">Total Buy-Ins</div>
+          <div class="summary-card-value" id="total-buy-ins">$0</div>
+        </div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Amount</th>
+              <th>Time</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="buy-in-table-body"></tbody>
+        </table>
+      </div>
+      <div id="buy-in-empty" class="empty-state">
+        <div class="empty-state-icon">🎰</div>
+        <p>No buy-ins recorded yet</p>
+      </div>
+      <button class="delete-all-btn" id="clear-buy-ins">Clear All Buy-Ins</button>
+    </div>
+
+    <div id="cash-out" class="tab-content">
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Total Buy-In</th>
+              <th>Cash Out</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="cash-out-table-body"></tbody>
+        </table>
+      </div>
+      <div id="cash-out-empty" class="empty-state">
+        <div class="empty-state-icon">💰</div>
+        <p>No players to cash out</p>
+      </div>
+    </div>
+
+    <div id="results" class="tab-content">
+      <div class="summary-cards">
+        <div class="summary-card">
+          <div class="summary-card-label">Total Cash Out</div>
+          <div class="summary-card-value" id="total-cash-out">$0</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-card-label">Difference</div>
+          <div class="summary-card-value" id="cash-difference">$0</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-card-label">Biggest Winner</div>
+          <div class="summary-card-value positive" id="biggest-winner">-</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-card-label">Biggest Loser</div>
+          <div class="summary-card-value negative" id="biggest-loser">-</div>
+        </div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Total Buy-In</th>
+              <th>Cash Out</th>
+              <th>Net</th>
+            </tr>
+          </thead>
+          <tbody id="results-table-body"></tbody>
+        </table>
+      </div>
+      <div id="results-empty" class="empty-state">
+        <div class="empty-state-icon">📊</div>
+        <p>Complete cash-outs to see results</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEYS = {
+      BUY_INS: 'poker_buy_ins',
+      CASH_OUTS: 'poker_cash_outs',
+      USERNAMES: 'poker_usernames',
+      AMOUNTS: 'poker_amounts'
+    };
+
+    function getData(key) {
+      const data = localStorage.getItem(key);
+      return data ? JSON.parse(data) : (key === STORAGE_KEYS.BUY_INS ? [] : {});
+    }
+
+    function setData(key, data) {
+      localStorage.setItem(key, JSON.stringify(data));
+    }
+
+    function formatCurrency(amount) {
+      return '$' + parseFloat(amount).toFixed(2);
+    }
+
+    function formatTime(timestamp) {
+      return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+        renderCurrentTab();
+      });
+    });
+
+    function renderCurrentTab() {
+      const activeTab = document.querySelector('.tab-content.active').id;
+      if (activeTab === 'buy-in-list') renderBuyInList();
+      if (activeTab === 'cash-out') renderCashOut();
+      if (activeTab === 'results') renderResults();
+    }
+
+    function renderAutocomplete() {
+      const usernames = getData(STORAGE_KEYS.USERNAMES);
+      const amounts = getData(STORAGE_KEYS.AMOUNTS);
+      
+      const usernameContainer = document.getElementById('username-autocomplete');
+      const amountContainer = document.getElementById('amount-autocomplete');
+      
+      usernameContainer.innerHTML = Object.keys(usernames)
+        .sort((a, b) => usernames[b] - usernames[a])
+        .slice(0, 10)
+        .map(name => `<button type="button" class="autocomplete-btn" data-value="${name}">${name}</button>`)
+        .join('');
+      
+      amountContainer.innerHTML = Object.keys(amounts)
+        .sort((a, b) => amounts[b] - amounts[a])
+        .slice(0, 10)
+        .map(amt => `<button type="button" class="autocomplete-btn" data-value="${amt}">${formatCurrency(amt)}</button>`)
+        .join('');
+      
+      usernameContainer.querySelectorAll('.autocomplete-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.getElementById('username').value = btn.dataset.value;
+        });
+      });
+      
+      amountContainer.querySelectorAll('.autocomplete-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.getElementById('amount').value = btn.dataset.value;
+        });
+      });
+    }
+
+    document.getElementById('buy-in-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const username = document.getElementById('username').value.trim();
+      const amount = parseFloat(document.getElementById('amount').value);
+      
+      if (!username || isNaN(amount) || amount <= 0) return;
+      
+      const buyIns = getData(STORAGE_KEYS.BUY_INS);
+      buyIns.push({
+        id: Date.now(),
+        username,
+        amount,
+        timestamp: Date.now()
+      });
+      setData(STORAGE_KEYS.BUY_INS, buyIns);
+      
+      const usernames = getData(STORAGE_KEYS.USERNAMES);
+      usernames[username] = (usernames[username] || 0) + 1;
+      setData(STORAGE_KEYS.USERNAMES, usernames);
+      
+      const amounts = getData(STORAGE_KEYS.AMOUNTS);
+      amounts[amount] = (amounts[amount] || 0) + 1;
+      setData(STORAGE_KEYS.AMOUNTS, amounts);
+      
+      document.getElementById('username').value = '';
+      document.getElementById('amount').value = '';
+      
+      renderAutocomplete();
+    });
+
+    function renderBuyInList() {
+      const buyIns = getData(STORAGE_KEYS.BUY_INS);
+      const tbody = document.getElementById('buy-in-table-body');
+      const emptyState = document.getElementById('buy-in-empty');
+      const table = tbody.closest('table');
+      
+      if (buyIns.length === 0) {
+        table.style.display = 'none';
+        emptyState.style.display = 'block';
+        document.getElementById('total-players').textContent = '0';
+        document.getElementById('total-buy-ins').textContent = '$0';
+        return;
+      }
+      
+      table.style.display = 'table';
+      emptyState.style.display = 'none';
+      
+      const uniquePlayers = [...new Set(buyIns.map(b => b.username))];
+      const totalAmount = buyIns.reduce((sum, b) => sum + b.amount, 0);
+      
+      document.getElementById('total-players').textContent = uniquePlayers.length;
+      document.getElementById('total-buy-ins').textContent = formatCurrency(totalAmount);
+      
+      tbody.innerHTML = buyIns.map(buyIn => `
+        <tr>
+          <td>${buyIn.username}</td>
+          <td>${formatCurrency(buyIn.amount)}</td>
+          <td>${formatTime(buyIn.timestamp)}</td>
+          <td>
+            <button class="btn-small" onclick="deleteBuyIn(${buyIn.id})">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    window.deleteBuyIn = function(id) {
+      const buyIns = getData(STORAGE_KEYS.BUY_INS);
+      const updated = buyIns.filter(b => b.id !== id);
+      setData(STORAGE_KEYS.BUY_INS, updated);
+      renderBuyInList();
+    };
+
+    document.getElementById('clear-buy-ins').addEventListener('click', () => {
+      if (confirm('Are you sure you want to clear all buy-ins?')) {
+        setData(STORAGE_KEYS.BUY_INS, []);
+        setData(STORAGE_KEYS.CASH_OUTS, {});
+        renderBuyInList();
+      }
+    });
+
+    function getPlayerTotals() {
+      const buyIns = getData(STORAGE_KEYS.BUY_INS);
+      const totals = {};
+      
+      buyIns.forEach(buyIn => {
+        if (!totals[buyIn.username]) {
+          totals[buyIn.username] = 0;
+        }
+        totals[buyIn.username] += buyIn.amount;
+      });
+      
+      return totals;
+    }
+
+    function renderCashOut() {
+      const playerTotals = getPlayerTotals();
+      const cashOuts = getData(STORAGE_KEYS.CASH_OUTS);
+      const tbody = document.getElementById('cash-out-table-body');
+      const emptyState = document.getElementById('cash-out-empty');
+      const table = tbody.closest('table');
+      
+      const players = Object.keys(playerTotals);
+      
+      if (players.length === 0) {
+        table.style.display = 'none';
+        emptyState.style.display = 'block';
+        return;
+      }
+      
+      table.style.display = 'table';
+      emptyState.style.display = 'none';
+      
+      tbody.innerHTML = players.map(player => {
+        const cashOut = cashOuts[player] !== undefined ? cashOuts[player] : '';
+        return `
+          <tr>
+            <td>${player}</td>
+            <td>${formatCurrency(playerTotals[player])}</td>
+            <td>
+              <input type="number" class="cash-out-input" id="cashout-${player}" 
+                value="${cashOut}" placeholder="0.00" min="0" step="0.01">
+            </td>
+            <td>
+              <button class="btn-small btn-save" onclick="saveCashOut('${player}')">Save</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    window.saveCashOut = function(player) {
+      const input = document.getElementById(`cashout-${player}`);
+      const value = parseFloat(input.value);
+      
+      const cashOuts = getData(STORAGE_KEYS.CASH_OUTS);
+      
+      if (isNaN(value) || value < 0) {
+        delete cashOuts[player];
+      } else {
+        cashOuts[player] = value;
+      }
+      
+      setData(STORAGE_KEYS.CASH_OUTS, cashOuts);
+      input.style.borderColor = 'var(--positive)';
+      setTimeout(() => {
+        input.style.borderColor = '';
+      }, 1000);
+    };
+
+    function renderResults() {
+      const playerTotals = getPlayerTotals();
+      const cashOuts = getData(STORAGE_KEYS.CASH_OUTS);
+      const tbody = document.getElementById('results-table-body');
+      const emptyState = document.getElementById('results-empty');
+      const table = tbody.closest('table');
+      
+      const players = Object.keys(playerTotals);
+      const results = players
+        .map(player => {
+          const buyIn = playerTotals[player];
+          const cashOut = cashOuts[player] !== undefined ? cashOuts[player] : null;
+          const net = cashOut !== null ? cashOut - buyIn : null;
+          return { player, buyIn, cashOut, net };
+        })
+        .filter(r => r.cashOut !== null)
+        .sort((a, b) => b.net - a.net);
+      
+      const totalCashOut = results.reduce((sum, r) => sum + r.cashOut, 0);
+      const totalBuyIn = results.reduce((sum, r) => sum + r.buyIn, 0);
+      const difference = totalCashOut - totalBuyIn;
+      
+      document.getElementById('total-cash-out').textContent = formatCurrency(totalCashOut);
+      
+      const diffElement = document.getElementById('cash-difference');
+      const diffDisplay = difference >= 0 ? '+' + formatCurrency(difference) : formatCurrency(difference);
+      diffElement.textContent = diffDisplay;
+      diffElement.className = 'summary-card-value ' + (difference > 0 ? 'positive' : (difference < 0 ? 'negative' : 'neutral'));
+      
+      if (results.length === 0) {
+        table.style.display = 'none';
+        emptyState.style.display = 'block';
+        document.getElementById('biggest-winner').textContent = '-';
+        document.getElementById('biggest-loser').textContent = '-';
+        return;
+      }
+      
+      table.style.display = 'table';
+      emptyState.style.display = 'none';
+      
+      const winner = results[0];
+      const loser = results[results.length - 1];
+      
+      if (winner.net > 0) {
+        document.getElementById('biggest-winner').textContent = `${winner.player} (+${formatCurrency(winner.net)})`;
+      } else {
+        document.getElementById('biggest-winner').textContent = '-';
+      }
+      
+      if (loser.net < 0) {
+        document.getElementById('biggest-loser').textContent = `${loser.player} (${formatCurrency(loser.net)})`;
+      } else {
+        document.getElementById('biggest-loser').textContent = '-';
+      }
+      
+      tbody.innerHTML = results.map(r => {
+        const netClass = r.net > 0 ? 'positive' : (r.net < 0 ? 'negative' : 'neutral');
+        const netDisplay = r.net >= 0 ? '+' + formatCurrency(r.net) : formatCurrency(r.net);
+        return `
+          <tr>
+            <td>${r.player}</td>
+            <td>${formatCurrency(r.buyIn)}</td>
+            <td>${formatCurrency(r.cashOut)}</td>
+            <td class="${netClass}">${netDisplay}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function init() {
+      renderAutocomplete();
+      renderBuyInList();
+      renderCashOut();
+      renderResults();
+    }
+
+    init();
+  </script>
+</body>
+</html>
