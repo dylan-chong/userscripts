@@ -53,55 +53,58 @@
     }
   }
 
-  let _colorCtx;
-  function getColorCtx() {
-    if (!_colorCtx) {
-      const canvas = document.createElement('canvas');
-      canvas.width = 1;
-      canvas.height = 1;
-      _colorCtx = canvas.getContext('2d', { willReadFrequently: true });
-    }
-    return _colorCtx;
-  }
-
-  function parseRgba(color) {
+  function getColorBrightness(color) {
     if (!color || color === 'transparent') return null;
 
-    const rgbMatch = color.match(/^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:[,/\s]+([\d.]+))?\s*\)$/);
-    if (rgbMatch) {
-      return {
-        r: parseInt(rgbMatch[1]),
-        g: parseInt(rgbMatch[2]),
-        b: parseInt(rgbMatch[3]),
-        a: rgbMatch[4] !== undefined ? parseFloat(rgbMatch[4]) : 1,
-      };
+    const nums = color.match(/[\d.]+/g);
+    if (!nums || nums.length < 3) return null;
+
+    const alpha = nums.length >= 4 ? parseFloat(nums[3]) : 1;
+
+    if (/^rgba?\(/.test(color)) {
+      if (alpha < 0.1) return null;
+      const r = parseInt(nums[0]), g = parseInt(nums[1]), b = parseInt(nums[2]);
+      return (r * 299 + g * 587 + b * 114) / 1000;
     }
 
-    const ctx = getColorCtx();
-    ctx.clearRect(0, 0, 1, 1);
-    ctx.fillStyle = color;
-    ctx.fillRect(0, 0, 1, 1);
-    const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data;
-    if (a === 0) return null;
-    return { r, g, b, a: a / 255 };
-  }
+    if (/^oklch\(|^oklab\(/.test(color)) {
+      if (alpha < 0.1) return null;
+      return parseFloat(nums[0]) * 255;
+    }
 
-  function rgbaBrightness(rgba) {
-    return (rgba.r * 299 + rgba.g * 587 + rgba.b * 114) / 1000;
+    if (/^lch\(|^lab\(/.test(color)) {
+      if (alpha < 0.1) return null;
+      return parseFloat(nums[0]) * 2.55;
+    }
+
+    if (/^hsla?\(/.test(color)) {
+      if (alpha < 0.1) return null;
+      return parseFloat(nums[2]) * 2.55;
+    }
+
+    if (/^color\(/.test(color)) {
+      const colorNums = color.replace(/^color\(\s*[\w-]+\s*/, '').match(/[\d.]+/g);
+      if (!colorNums || colorNums.length < 3) return null;
+      const a = colorNums.length >= 4 ? parseFloat(colorNums[3]) : 1;
+      if (a < 0.1) return null;
+      const r = parseFloat(colorNums[0]) * 255, g = parseFloat(colorNums[1]) * 255, b = parseFloat(colorNums[2]) * 255;
+      return (r * 299 + g * 587 + b * 114) / 1000;
+    }
+
+    return null;
   }
 
   function getGradientBrightness(backgroundImage) {
     if (!backgroundImage || backgroundImage === 'none') return null;
-    const colorRegex = /\w+\([^)]+\)/g;
-    const tokens = backgroundImage.match(colorRegex);
+    const tokens = backgroundImage.match(/\w+\([^)]+\)/g);
     if (!tokens) return null;
 
     let total = 0, count = 0;
     for (const token of tokens) {
       if (/^(linear|radial|conic|repeating)/.test(token)) continue;
-      const rgba = parseRgba(token);
-      if (rgba && rgba.a >= 0.1) {
-        total += rgbaBrightness(rgba);
+      const brightness = getColorBrightness(token);
+      if (brightness !== null) {
+        total += brightness;
         count++;
       }
     }
@@ -109,9 +112,7 @@
   }
 
   function getBackgroundBrightness(style) {
-    const rgba = parseRgba(style.backgroundColor);
-    if (rgba && rgba.a >= 0.1) return rgbaBrightness(rgba);
-    return getGradientBrightness(style.backgroundImage);
+    return getColorBrightness(style.backgroundColor) ?? getGradientBrightness(style.backgroundImage);
   }
 
   function getVisibleBrightness(el) {
@@ -136,6 +137,7 @@
   }
 
   function isPageDark() {
+    const t0 = performance.now();
     // const darkScheme = hasDarkColorScheme();
     // if (darkScheme) {
     //   console.log('[DarkMode] hasDarkColorScheme=true, skipping pixel sampling');
@@ -167,7 +169,7 @@
     const isDark = avgBrightness < 128;
 
     console.log(
-      `[DarkMode] avgBrightness=${avgBrightness.toFixed(1)} isDark=${isDark} samples=${samples.length}`,
+      `[DarkMode] avgBrightness=${avgBrightness.toFixed(1)} isDark=${isDark} samples=${samples.length} took=${(performance.now() - t0).toFixed(1)}ms`,
       '\n  per-sample:',
       samples.map(s => {
         const style = window.getComputedStyle(s.el);
