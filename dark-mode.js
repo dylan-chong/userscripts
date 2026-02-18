@@ -27,9 +27,8 @@
       localStorage.setItem(getStorageKey('darkModeState'), darkModeState);
       localStorage.setItem(getStorageKey('imagesInverted'), imagesInverted);
       localStorage.setItem(getStorageKey('buttonsOnRight'), buttonsOnRight);
-      console.log('Settings saved for', domain);
     } catch (e) {
-      console.error('Failed to save settings:', e);
+      console.error(e);
     }
   }
 
@@ -41,20 +40,17 @@
       
       if (savedDarkModeState !== null && ['auto', 'off', 'on'].includes(savedDarkModeState)) {
         darkModeState = savedDarkModeState;
-        console.log('Loaded darkModeState:', darkModeState);
       }
       
       if (savedImagesInverted !== null) {
         imagesInverted = savedImagesInverted === 'true';
-        console.log('Loaded imagesInverted:', imagesInverted);
       }
       
       if (savedButtonsOnRight !== null) {
         buttonsOnRight = savedButtonsOnRight === 'true';
-        console.log('Loaded buttonsOnRight:', buttonsOnRight);
       }
     } catch (e) {
-      console.error('Failed to load settings:', e);
+      console.error(e);
     }
   }
 
@@ -71,34 +67,49 @@
     return null;
   }
 
-  function isDarkMode() {
-    const elements = document.querySelectorAll('html, body, main, article, section, header, footer, nav, aside, div');
-    const elementData = [];
+  function getVisibleBackgroundColor(el) {
+    while (el) {
+      const style = window.getComputedStyle(el);
+      const bgColor = style.backgroundColor;
+      const brightness = getBrightness(bgColor);
+      if (brightness !== null) {
+        return { el, bgColor, brightness };
+      }
+      el = el.parentElement;
+    }
+    return null;
+  }
 
-    elements.forEach(el => {
-      const rect = el.getBoundingClientRect();
-      const area = rect.width * rect.height;
-      if (area > 0 && rect.top < window.innerHeight && rect.bottom > 0) {
-        const style = window.getComputedStyle(el);
-        const bgColor = style.backgroundColor;
-        const brightness = getBrightness(bgColor);
-        if (brightness !== null) {
-          elementData.push({ area, brightness });
+  function isPageDark() {
+    const samplePoints = [];
+    const cols = 5;
+    const rows = 5;
+    
+    for (let i = 0; i < cols; i++) {
+      for (let j = 0; j < rows; j++) {
+        const x = (window.innerWidth / (cols + 1)) * (i + 1);
+        const y = (window.innerHeight / (rows + 1)) * (j + 1);
+        samplePoints.push({ x, y });
+      }
+    }
+
+    const samples = [];
+    samplePoints.forEach(({ x, y }) => {
+      const el = document.elementFromPoint(x, y);
+      if (el) {
+        const result = getVisibleBackgroundColor(el);
+        if (result) {
+          samples.push({ x, y, ...result });
         }
       }
     });
 
-    elementData.sort((a, b) => b.area - a.area);
-    const top5 = elementData.slice(0, 5);
-
-    if (top5.length === 0) {
+    if (samples.length === 0) {
       return false;
     }
 
-    const totalArea = top5.reduce((sum, e) => sum + e.area, 0);
-    const weightedBrightness = top5.reduce((sum, e) => sum + e.brightness * e.area, 0) / totalArea;
-
-    return weightedBrightness < 128;
+    const avgBrightness = samples.reduce((sum, s) => sum + s.brightness, 0) / samples.length;
+    return avgBrightness < 128;
   }
 
   function applyDarkMode(force = false) {
@@ -118,15 +129,12 @@
         filter: invert(1) hue-rotate(180deg);
       }
     `;
-
-    console.log('Dark mode (invert) applied!');
   }
 
   function removeDarkMode() {
     if (darkModeStyle) {
       darkModeStyle.textContent = '';
     }
-    console.log('Dark mode removed!');
   }
 
   function createImageInvertStyle() {
@@ -356,7 +364,7 @@
     } else if (darkModeState === 'off') {
       removeDarkMode();
     } else {
-      const alreadyDark = isDarkMode();
+      const alreadyDark = isPageDark();
       if (alreadyDark) {
         removeDarkMode();
       } else {
@@ -367,27 +375,18 @@
   }
 
   function startPeriodicChecking() {
-    const startTime = Date.now();
-    let pageReadyTime = null;
-
-    const checkInterval = setInterval(() => {
-      const currentTime = Date.now();
-      
-      if (document.readyState === 'complete' && pageReadyTime === null) {
-        pageReadyTime = currentTime;
-      }
-      
-      checkAndApplyDarkMode();
-      
-      if (pageReadyTime !== null && currentTime - pageReadyTime >= 500) {
-        clearInterval(checkInterval);
-        console.log('Periodic dark mode checking complete');
-      }
-    }, 100);
+    setInterval(() => {
+      try {
+        checkAndApplyDarkMode();
+      } catch (e) {
+      console.error(e);
+    }
+    }, 1000 / 15);
   }
 
   init();
   checkAndApplyDarkMode();
   startPeriodicChecking();
 
+  window.isPageDark = isPageDark;
 })();
