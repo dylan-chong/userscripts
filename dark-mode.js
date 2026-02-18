@@ -19,7 +19,7 @@
   let allButtons = [];
 
   function getStorageKey(setting) {
-    return `darkmode_${domain}_${setting}`;
+    return `darkmode_v2_${domain}_${setting}`;
   }
 
   function saveSettings() {
