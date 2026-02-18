@@ -228,15 +228,30 @@
   }
 
   const BUTTON_STYLE = `
+    all: initial;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 32px;
     height: 32px;
+    padding: 0;
+    margin: 0;
     border-radius: 50%;
     border: 2px solid #666;
     background-color: #333;
     color: #fff;
+    font-family: system-ui, sans-serif;
     font-size: 16px;
+    font-weight: normal;
+    line-height: 1;
+    text-align: center;
+    text-transform: none;
+    letter-spacing: normal;
+    text-indent: 0;
+    text-decoration: none;
     cursor: pointer;
     z-index: 999999;
+    box-sizing: border-box;
     box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     transition: all 0.2s ease;
   `;
@@ -420,7 +435,7 @@
   }
 
   function startPeriodicChecking() {
-    const fastInterval = setInterval(checkAndApplyDarkMode, 1000 / 10);
+    const fastInterval = setInterval(checkAndApplyDarkMode, 1000 / 5);
     setTimeout(() => {
       clearInterval(fastInterval);
       setInterval(checkAndApplyDarkMode, 1000 / 2);
