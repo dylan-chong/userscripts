@@ -58,29 +58,47 @@
     }
   }
 
-  function isDarkMode() {
-    const body = document.body;
-    const bgColor = window.getComputedStyle(body).backgroundColor;
-    
-    console.log('Detected background color:', bgColor);
-    
-    const rgb = bgColor.match(/\d+/g);
+  function getBrightness(color) {
+    const rgb = color.match(/\d+/g);
     if (rgb && rgb.length >= 3) {
       const r = parseInt(rgb[0]);
       const g = parseInt(rgb[1]);
       const b = parseInt(rgb[2]);
-      
-      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-      
-      console.log(`RGB: (${r}, ${g}, ${b}), Brightness: ${brightness.toFixed(2)}`);
-      
-      const isDark = brightness < 128;
-      console.log('Is dark mode:', isDark);
-      
-      return isDark;
+      const a = rgb.length >= 4 ? parseFloat(rgb[3]) : 1;
+      if (a < 0.1) return null;
+      return (r * 299 + g * 587 + b * 114) / 1000;
     }
-    
-    return false;
+    return null;
+  }
+
+  function isDarkMode() {
+    const elements = document.querySelectorAll('html, body, main, article, section, header, footer, nav, aside, div');
+    const elementData = [];
+
+    elements.forEach(el => {
+      const rect = el.getBoundingClientRect();
+      const area = rect.width * rect.height;
+      if (area > 0 && rect.top < window.innerHeight && rect.bottom > 0) {
+        const style = window.getComputedStyle(el);
+        const bgColor = style.backgroundColor;
+        const brightness = getBrightness(bgColor);
+        if (brightness !== null) {
+          elementData.push({ area, brightness });
+        }
+      }
+    });
+
+    elementData.sort((a, b) => b.area - a.area);
+    const top5 = elementData.slice(0, 5);
+
+    if (top5.length === 0) {
+      return false;
+    }
+
+    const totalArea = top5.reduce((sum, e) => sum + e.area, 0);
+    const weightedBrightness = top5.reduce((sum, e) => sum + e.brightness * e.area, 0) / totalArea;
+
+    return weightedBrightness < 128;
   }
 
   function applyDarkMode(force = false) {
