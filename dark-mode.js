@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Simple Dark Mode (Invert)
 // @namespace    http://tampermonkey.net/
-// @version      2.4
+// @version      2.5
 // @description  Apply dark mode to websites using color inversion with toggles
 // @author       You
 // @match        *://*/*
@@ -12,7 +12,7 @@
   'use strict';
 
   let imagesInverted = true;
-  let darkModeEnabled = true;
+  let darkModeState = 'auto'; // 'auto', 'off', 'on'
   let buttonsOnRight = true;
   let darkModeStyle = null;
   const domain = window.location.hostname;
@@ -24,7 +24,7 @@
 
   function saveSettings() {
     try {
-      localStorage.setItem(getStorageKey('darkModeEnabled'), darkModeEnabled);
+      localStorage.setItem(getStorageKey('darkModeState'), darkModeState);
       localStorage.setItem(getStorageKey('imagesInverted'), imagesInverted);
       localStorage.setItem(getStorageKey('buttonsOnRight'), buttonsOnRight);
       console.log('Settings saved for', domain);
@@ -35,13 +35,13 @@
 
   function loadSettings() {
     try {
-      const savedDarkMode = localStorage.getItem(getStorageKey('darkModeEnabled'));
+      const savedDarkModeState = localStorage.getItem(getStorageKey('darkModeState'));
       const savedImagesInverted = localStorage.getItem(getStorageKey('imagesInverted'));
       const savedButtonsOnRight = localStorage.getItem(getStorageKey('buttonsOnRight'));
       
-      if (savedDarkMode !== null) {
-        darkModeEnabled = savedDarkMode === 'true';
-        console.log('Loaded darkModeEnabled:', darkModeEnabled);
+      if (savedDarkModeState !== null && ['auto', 'off', 'on'].includes(savedDarkModeState)) {
+        darkModeState = savedDarkModeState;
+        console.log('Loaded darkModeState:', darkModeState);
       }
       
       if (savedImagesInverted !== null) {
@@ -135,10 +135,10 @@
   function updateButtonPositions() {
     allButtons.forEach(button => {
       if (buttonsOnRight) {
-        button.style.right = '20px';
+        button.style.right = '16px';
         button.style.left = 'auto';
       } else {
-        button.style.left = '20px';
+        button.style.left = '16px';
         button.style.right = 'auto';
       }
     });
@@ -151,15 +151,15 @@
     button.title = 'Toggle image inversion';
     button.style.cssText = `
       position: fixed;
-      bottom: 20px;
-      ${buttonsOnRight ? 'right: 20px;' : 'left: 20px;'}
-      width: 40px;
-      height: 40px;
+      bottom: 16px;
+      ${buttonsOnRight ? 'right: 16px;' : 'left: 16px;'}
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       border: 2px solid #666;
       background-color: #333;
       color: #fff;
-      font-size: 20px;
+      font-size: 16px;
       cursor: pointer;
       z-index: 999999;
       box-shadow: 0 2px 10px rgba(0,0,0,0.3);
@@ -187,27 +187,44 @@
     return button;
   }
 
+  function getDarkModeIcon(state) {
+    switch (state) {
+      case 'auto': return '◐';
+      case 'off': return '☀️';
+      case 'on': return '🌙';
+      default: return '◐';
+    }
+  }
+
+  function getDarkModeTitle(state) {
+    switch (state) {
+      case 'auto': return 'Dark mode: Auto';
+      case 'off': return 'Dark mode: Off';
+      case 'on': return 'Dark mode: On';
+      default: return 'Dark mode: Auto';
+    }
+  }
+
   function createDarkModeToggleButton() {
     const button = document.createElement('button');
     button.id = 'dark-mode-toggle';
-    button.textContent = '🌙';
-    button.title = 'Toggle dark mode';
+    button.textContent = getDarkModeIcon(darkModeState);
+    button.title = getDarkModeTitle(darkModeState);
     button.style.cssText = `
       position: fixed;
-      bottom: 70px;
-      ${buttonsOnRight ? 'right: 20px;' : 'left: 20px;'}
-      width: 40px;
-      height: 40px;
+      bottom: 56px;
+      ${buttonsOnRight ? 'right: 16px;' : 'left: 16px;'}
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       border: 2px solid #666;
       background-color: #333;
       color: #fff;
-      font-size: 20px;
+      font-size: 16px;
       cursor: pointer;
       z-index: 999999;
       box-shadow: 0 2px 10px rgba(0,0,0,0.3);
       transition: all 0.2s ease;
-      opacity: ${darkModeEnabled ? '1' : '0.5'};
     `;
 
     button.addEventListener('mouseenter', () => {
@@ -219,13 +236,12 @@
     });
 
     button.addEventListener('click', () => {
-      darkModeEnabled = !darkModeEnabled;
-      if (darkModeEnabled) {
-        applyDarkMode(true);
-      } else {
-        removeDarkMode();
-      }
-      button.style.opacity = darkModeEnabled ? '1' : '0.5';
+      const states = ['auto', 'off', 'on'];
+      const currentIndex = states.indexOf(darkModeState);
+      darkModeState = states[(currentIndex + 1) % 3];
+      button.textContent = getDarkModeIcon(darkModeState);
+      button.title = getDarkModeTitle(darkModeState);
+      checkAndApplyDarkMode();
       saveSettings();
     });
 
@@ -241,15 +257,15 @@
     button.title = 'Toggle button position';
     button.style.cssText = `
       position: fixed;
-      bottom: 120px;
-      ${buttonsOnRight ? 'right: 20px;' : 'left: 20px;'}
-      width: 40px;
-      height: 40px;
+      bottom: 96px;
+      ${buttonsOnRight ? 'right: 16px;' : 'left: 16px;'}
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       border: 2px solid #666;
       background-color: #333;
       color: #fff;
-      font-size: 20px;
+      font-size: 16px;
       cursor: pointer;
       z-index: 999999;
       box-shadow: 0 2px 10px rgba(0,0,0,0.3);
@@ -282,8 +298,8 @@
   function init() {
     loadSettings();
     
-    const savedDarkMode = localStorage.getItem(getStorageKey('darkModeEnabled'));
-    hasSavedSettings = savedDarkMode !== null;
+    const savedDarkModeState = localStorage.getItem(getStorageKey('darkModeState'));
+    hasSavedSettings = savedDarkModeState !== null;
     
     if (!imageStyle) {
       imageStyle = createImageInvertStyle();
@@ -307,35 +323,28 @@
     }
   }
 
-  function updateButtonOpacity() {
+  function updateDarkModeButton() {
     const darkModeButton = document.getElementById('dark-mode-toggle');
     if (darkModeButton) {
-      darkModeButton.style.opacity = darkModeEnabled ? '1' : '0.5';
+      darkModeButton.textContent = getDarkModeIcon(darkModeState);
+      darkModeButton.title = getDarkModeTitle(darkModeState);
     }
   }
 
   function checkAndApplyDarkMode() {
-    if (hasSavedSettings) {
-      if (darkModeEnabled) {
-        applyDarkMode(true);
-      } else {
-        removeDarkMode();
-      }
+    if (darkModeState === 'on') {
+      applyDarkMode(true);
+    } else if (darkModeState === 'off') {
+      removeDarkMode();
     } else {
       const alreadyDark = isDarkMode();
-      if (alreadyDark && darkModeEnabled) {
-        darkModeEnabled = false;
+      if (alreadyDark) {
         removeDarkMode();
-      } else if (!alreadyDark && !darkModeEnabled) {
-        darkModeEnabled = true;
-        applyDarkMode(true);
-      } else if (darkModeEnabled) {
-        applyDarkMode(true);
       } else {
-        removeDarkMode();
+        applyDarkMode(true);
       }
     }
-    updateButtonOpacity();
+    updateDarkModeButton();
   }
 
   function startPeriodicChecking() {
