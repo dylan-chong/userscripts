@@ -193,7 +193,8 @@
         background-color: #fff;
       }
       
-      video {
+      video,
+      iframe {
         filter: invert(1) hue-rotate(180deg);
       }
     `;
