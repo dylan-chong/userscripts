@@ -54,35 +54,56 @@
     }
   }
 
-  function getBrightness(color) {
-    const rgb = color.match(/\d+/g);
-    if (rgb && rgb.length >= 3) {
-      const r = parseInt(rgb[0]);
-      const g = parseInt(rgb[1]);
-      const b = parseInt(rgb[2]);
-      const a = rgb.length >= 4 ? parseFloat(rgb[3]) : 1;
-      if (a < 0.1) return null;
-      return (r * 299 + g * 587 + b * 114) / 1000;
-    }
-    return null;
+  function parseRgba(color) {
+    const parts = color.match(/[\d.]+/g);
+    if (!parts || parts.length < 3) return null;
+    return {
+      r: parseInt(parts[0]),
+      g: parseInt(parts[1]),
+      b: parseInt(parts[2]),
+      a: parts.length >= 4 ? parseFloat(parts[3]) : 1,
+    };
   }
 
-  function getVisibleBackgroundColor(el) {
-    while (el) {
-      const style = window.getComputedStyle(el);
-      const bgColor = style.backgroundColor;
-      const brightness = getBrightness(bgColor);
-      if (brightness !== null) {
-        return { el, bgColor, brightness };
+  function rgbaBrightness(rgba) {
+    return (rgba.r * 299 + rgba.g * 587 + rgba.b * 114) / 1000;
+  }
+
+  function getGradientBrightness(backgroundImage) {
+    if (!backgroundImage || backgroundImage === 'none') return null;
+    const colorRegex = /rgba?\([^)]+\)/g;
+    const colors = backgroundImage.match(colorRegex);
+    if (!colors || colors.length === 0) return null;
+
+    let total = 0, count = 0;
+    for (const color of colors) {
+      const rgba = parseRgba(color);
+      if (rgba && rgba.a >= 0.1) {
+        total += rgbaBrightness(rgba);
+        count++;
       }
+    }
+    return count > 0 ? total / count : null;
+  }
+
+  function getBackgroundBrightness(style) {
+    const rgba = parseRgba(style.backgroundColor);
+    if (rgba && rgba.a >= 0.1) return rgbaBrightness(rgba);
+    return getGradientBrightness(style.backgroundImage);
+  }
+
+  function getVisibleBrightness(el) {
+    while (el) {
+      const brightness = getBackgroundBrightness(window.getComputedStyle(el));
+      if (brightness !== null) return { el, brightness };
       el = el.parentElement;
     }
-    return null;
+    return { el: document.documentElement, brightness: 255 };
   }
 
   function isPageDark() {
     const samplePoints = [];
-    const cols = 5;
+    const cols = 10;
     const rows = 5;
     
     for (let i = 0; i < cols; i++) {
@@ -97,16 +118,10 @@
     samplePoints.forEach(({ x, y }) => {
       const el = document.elementFromPoint(x, y);
       if (el) {
-        const result = getVisibleBackgroundColor(el);
-        if (result) {
-          samples.push({ x, y, ...result });
-        }
+        const result = getVisibleBrightness(el);
+        samples.push({ x, y, ...result });
       }
     });
-
-    if (samples.length === 0) {
-      return false;
-    }
 
     const avgBrightness = samples.reduce((sum, s) => sum + s.brightness, 0) / samples.length;
     return avgBrightness < 128;
@@ -375,13 +390,19 @@
   }
 
   function startPeriodicChecking() {
-    setInterval(() => {
+    const run = () => {
       try {
         checkAndApplyDarkMode();
       } catch (e) {
-      console.error(e);
-    }
-    }, 1000 / 15);
+        console.error(e);
+      }
+    };
+
+    const fastInterval = setInterval(run, 1000 / 10);
+    setTimeout(() => {
+      clearInterval(fastInterval);
+      setInterval(run, 1000 / 4);
+    }, 10000);
   }
 
   init();
