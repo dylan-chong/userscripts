@@ -60,29 +60,19 @@
     if (!nums || nums.length < 3) return null;
 
     const alpha = nums.length >= 4 ? parseFloat(nums[3]) : 1;
+    if (alpha < 0.05) return null;
 
+    let brightness;
     if (/^rgba?\(/.test(color)) {
-      if (alpha < 0.1) return null;
       const r = parseInt(nums[0]), g = parseInt(nums[1]), b = parseInt(nums[2]);
-      return (r * 299 + g * 587 + b * 114) / 1000;
-    }
-
-    if (/^oklch\(|^oklab\(/.test(color)) {
-      if (alpha < 0.1) return null;
-      return parseFloat(nums[0]) * 255;
-    }
-
-    if (/^lch\(|^lab\(/.test(color)) {
-      if (alpha < 0.1) return null;
-      return parseFloat(nums[0]) * 2.55;
-    }
-
-    if (/^hsla?\(/.test(color)) {
-      if (alpha < 0.1) return null;
-      return parseFloat(nums[2]) * 2.55;
-    }
-
-    if (/^color\(/.test(color)) {
+      brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    } else if (/^oklch\(|^oklab\(/.test(color)) {
+      brightness = parseFloat(nums[0]) * 255;
+    } else if (/^lch\(|^lab\(/.test(color)) {
+      brightness = parseFloat(nums[0]) * 2.55;
+    } else if (/^hsla?\(/.test(color)) {
+      brightness = parseFloat(nums[2]) * 2.55;
+    } else if (/^color\(/.test(color)) {
       const colorNums = color.replace(/^color\(\s*[\w-]+\s*/, '').match(/[\d.]+/g);
       if (!colorNums || colorNums.length < 3) return null;
       const a = colorNums.length >= 4 ? parseFloat(colorNums[3]) : 1;
@@ -99,29 +89,48 @@
     const tokens = backgroundImage.match(/\w+\([^)]+\)/g);
     if (!tokens) return null;
 
-    let total = 0, count = 0;
+    let totalBrightness = 0, totalAlpha = 0, count = 0;
     for (const token of tokens) {
       if (/^(linear|radial|conic|repeating)/.test(token)) continue;
-      const brightness = getColorBrightness(token);
-      if (brightness !== null) {
-        total += brightness;
+      const result = getColorBrightness(token);
+      if (result) {
+        totalBrightness += result.brightness;
+        totalAlpha += result.alpha;
         count++;
       }
     }
-    return count > 0 ? total / count : null;
+    if (count === 0) return null;
+    return { brightness: totalBrightness / count, alpha: Math.min(totalAlpha / count, 1) };
   }
 
   function getBackgroundBrightness(style) {
     return getColorBrightness(style.backgroundColor) ?? getGradientBrightness(style.backgroundImage);
   }
 
-  function getVisibleBrightness(el) {
-    while (el) {
-      const brightness = getBackgroundBrightness(window.getComputedStyle(el));
-      if (brightness !== null) return { el, brightness };
-      el = el.parentElement;
+  function getVisibleBrightness(el, compositedBrightness = 0, compositedAlpha = 0, layers = []) {
+    if (!el) {
+      if (compositedAlpha > 0.05) {
+        const whiteFill = 255 * (1 - compositedAlpha);
+        layers.push(`${'  '.repeat(layers.length)}<root> white fill, cumA=1.00`);
+        return { el: document.documentElement, brightness: compositedBrightness + whiteFill, layers };
+      }
+      layers.push(`${'  '.repeat(layers.length)}<root> default white`);
+      return { el: document.documentElement, brightness: 255, layers };
     }
-    return { el: document.documentElement, brightness: 255 };
+
+    const style = window.getComputedStyle(el);
+    const result = getBackgroundBrightness(style);
+    if (result) {
+      const layerWeight = result.alpha * (1 - compositedAlpha);
+      compositedBrightness += result.brightness * layerWeight;
+      compositedAlpha += layerWeight;
+      layers.push(`${'  '.repeat(layers.length)}<${el.tagName.toLowerCase()}> bg="${style.backgroundColor}" a=${result.alpha.toFixed(2)} b=${result.brightness.toFixed(0)} cumA=${compositedAlpha.toFixed(2)}`);
+      if (compositedAlpha >= 0.95) {
+        return { el, brightness: compositedBrightness / compositedAlpha, layers };
+      }
+    }
+
+    return getVisibleBrightness(el.parentElement, compositedBrightness, compositedAlpha, layers);
   }
 
   function hasDarkColorScheme() {
@@ -138,11 +147,10 @@
 
   function isPageDark() {
     const t0 = performance.now();
-    // const darkScheme = hasDarkColorScheme();
-    // if (darkScheme) {
-    //   console.log('[DarkMode] hasDarkColorScheme=true, skipping pixel sampling');
-    //   return true;
-    // }
+    if (hasDarkColorScheme()) {
+      console.log(`[DarkMode] hasDarkColorScheme=true, skipping pixel sampling, took=${(performance.now() - t0).toFixed(1)}ms`);
+      return true;
+    }
 
     const samplePoints = [];
     const cols = 10;
@@ -161,21 +169,20 @@
       const el = document.elementFromPoint(x, y);
       if (el) {
         const result = getVisibleBrightness(el);
-        samples.push({ x, y, ...result });
+        samples.push({ x, y, hitEl: el, ...result });
       }
     });
 
     const avgBrightness = samples.reduce((sum, s) => sum + s.brightness, 0) / samples.length;
     const isDark = avgBrightness < 128;
 
-    console.log(
-      `[DarkMode] avgBrightness=${avgBrightness.toFixed(1)} isDark=${isDark} samples=${samples.length} took=${(performance.now() - t0).toFixed(1)}ms`,
-      '\n  per-sample:',
-      samples.map(s => {
-        const style = window.getComputedStyle(s.el);
-        return `(${Math.round(s.x)},${Math.round(s.y)}) brightness=${s.brightness.toFixed(1)} el=<${s.el.tagName.toLowerCase()}> bg="${style.backgroundColor}" bgImg="${style.backgroundImage.slice(0, 60)}"`;
-      }).join('\n  ')
-    );
+    console.log(`[DarkMode] avgBrightness=${avgBrightness.toFixed(1)} isDark=${isDark} samples=${samples.length} took=${(performance.now() - t0).toFixed(1)}ms`);
+    for (const s of samples) {
+      console.log(`  (${Math.round(s.x)},${Math.round(s.y)}) brightness=${s.brightness.toFixed(1)} hit=<${s.hitEl.tagName.toLowerCase()}${s.hitEl.id ? '#' + s.hitEl.id : ''}${s.hitEl.className ? '.' + String(s.hitEl.className).split(' ')[0] : ''}>`);
+      for (const layer of s.layers) {
+        console.log(`    ${layer}`);
+      }
+    }
 
     return isDark;
   }
