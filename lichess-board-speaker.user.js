@@ -1,9 +1,12 @@
 // ==UserScript==
 // @name        lichess-board-speaker
 // @description This is your new file, start writing code
+// @version     1.0
 // @match       *://lichess.org/*
 // @grant          none
 // @inject-into    content
+// @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/lichess-board-speaker.user.js
+// @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/lichess-board-speaker.user.js
 // ==/UserScript==
 
 // Example board from lichess puzzle page
