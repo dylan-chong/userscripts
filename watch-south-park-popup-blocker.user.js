@@ -8,6 +8,8 @@
 // @match        https://*.watchsouthpark.tv/*
 // @grant        none
 // @run-at       document-start
+// @updateURL    https://raw.githubusercontent.com/dylan-chong/userscripts/main/watch-south-park-popup-blocker.user.js
+// @downloadURL  https://raw.githubusercontent.com/dylan-chong/userscripts/main/watch-south-park-popup-blocker.user.js
 // ==/UserScript==
 
 (function() {

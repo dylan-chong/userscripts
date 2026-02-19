@@ -6,6 +6,8 @@
 // @author       You
 // @match        *://*/*
 // @grant        none
+// @updateURL    https://raw.githubusercontent.com/dylan-chong/userscripts/main/dark-mode.user.js
+// @downloadURL  https://raw.githubusercontent.com/dylan-chong/userscripts/main/dark-mode.user.js
 // ==/UserScript==
 
 (function() {

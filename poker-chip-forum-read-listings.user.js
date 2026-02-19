@@ -6,6 +6,8 @@
 // @author       You
 // @match        https://www.pokerchipforum.com/*
 // @grant        none
+// @updateURL    https://raw.githubusercontent.com/dylan-chong/userscripts/main/poker-chip-forum-read-listings.user.js
+// @downloadURL  https://raw.githubusercontent.com/dylan-chong/userscripts/main/poker-chip-forum-read-listings.user.js
 // ==/UserScript==
 
 (function() {

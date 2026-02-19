@@ -1,7 +1,10 @@
 // ==UserScript==
 // @name        youtube-redirect
 // @description This is your new file, start writing code
+// @version     1.0
 // @match       *://*.youtube.com/*
+// @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-redirect.user.js
+// @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-redirect.user.js
 // ==/UserScript==
 
 const getDesiredYoutubeRedirectUrl = () => {
