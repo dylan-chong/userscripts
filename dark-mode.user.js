@@ -80,10 +80,11 @@
       const a = colorNums.length >= 4 ? parseFloat(colorNums[3]) : 1;
       if (a < 0.1) return null;
       const r = parseFloat(colorNums[0]) * 255, g = parseFloat(colorNums[1]) * 255, b = parseFloat(colorNums[2]) * 255;
-      return (r * 299 + g * 587 + b * 114) / 1000;
+      brightness = (r * 299 + g * 587 + b * 114) / 1000;
     }
 
-    return null;
+    if (brightness == null) return null;
+    return { brightness, alpha };
   }
 
   function getGradientBrightness(backgroundImage) {
