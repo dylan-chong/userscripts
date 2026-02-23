@@ -148,10 +148,10 @@
     return false;
   }
 
-  function isPageDark() {
+  function isPageDark({ log = false } = {}) {
     const t0 = performance.now();
     if (hasDarkColorScheme()) {
-      console.log(`[DarkMode] hasDarkColorScheme=true, skipping pixel sampling, took=${(performance.now() - t0).toFixed(1)}ms`);
+      if (log) console.log(`[DarkMode] hasDarkColorScheme=true, skipping pixel sampling, took=${(performance.now() - t0).toFixed(1)}ms`);
       return true;
     }
 
@@ -179,11 +179,13 @@
     const avgBrightness = samples.reduce((sum, s) => sum + s.brightness, 0) / samples.length;
     const isDark = avgBrightness < 128;
 
-    console.log(`[DarkMode] avgBrightness=${avgBrightness.toFixed(1)} isDark=${isDark} samples=${samples.length} took=${(performance.now() - t0).toFixed(1)}ms`);
-    for (const s of samples) {
-      console.log(`  (${Math.round(s.x)},${Math.round(s.y)}) brightness=${s.brightness.toFixed(1)} hit=<${s.hitEl.tagName.toLowerCase()}${s.hitEl.id ? '#' + s.hitEl.id : ''}${s.hitEl.className ? '.' + String(s.hitEl.className).split(' ')[0] : ''}>`);
-      for (const layer of s.layers) {
-        console.log(`    ${layer}`);
+    if (log) {
+      console.log(`[DarkMode] avgBrightness=${avgBrightness.toFixed(1)} isDark=${isDark} samples=${samples.length} took=${(performance.now() - t0).toFixed(1)}ms`);
+      for (const s of samples) {
+        console.log(`  (${Math.round(s.x)},${Math.round(s.y)}) brightness=${s.brightness.toFixed(1)} hit=<${s.hitEl.tagName.toLowerCase()}${s.hitEl.id ? '#' + s.hitEl.id : ''}${s.hitEl.className ? '.' + String(s.hitEl.className).split(' ')[0] : ''}>`);
+        for (const layer of s.layers) {
+          console.log(`    ${layer}`);
+        }
       }
     }
 
