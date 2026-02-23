@@ -62,7 +62,7 @@
 
     function createBlockAutoplayButton() {
         if (document.getElementById(BLOCK_AUTOPLAY_BTN_ID)) return;
-        const loopRenderer = document.querySelector('ytd-playlist-loop-button-renderer');
+        const loopRenderer = document.querySelector('ytd-playlist-loop-button-renderer') || document.querySelector('ytm-playlist-loop-button-renderer');
         if (!loopRenderer) return;
 
         const btn = document.createElement('button');
