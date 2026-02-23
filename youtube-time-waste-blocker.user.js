@@ -17,13 +17,27 @@
         { whitelist: true, type: 'channelOrTitle', keywords: ['ASMR', 'Meditation', 'Singing Bowls', 'Exercise', 'Breathing', 'Mindfulness'] },
     ];
 
+    function queryFirst(...selectors) {
+        for (const s of selectors) {
+            const el = document.querySelector(s);
+            if (el?.textContent?.trim()) return el;
+        }
+        return null;
+    }
+
     function getVideoTitle() {
-        const el = document.querySelector('h1.ytd-watch-metadata yt-formatted-string');
+        const el = queryFirst(
+            'h1.ytd-watch-metadata yt-formatted-string',
+            'h2.slim-video-information-title .yt-core-attributed-string',
+        );
         return el?.textContent?.trim() ?? '';
     }
 
     function getChannelName() {
-        const el = document.querySelector('ytd-video-owner-renderer ytd-channel-name yt-formatted-string a');
+        const el = queryFirst(
+            'ytd-video-owner-renderer ytd-channel-name yt-formatted-string a',
+            'ytm-slim-owner-renderer .slim-owner-icon-and-title .yt-core-attributed-string',
+        );
         return el?.textContent?.trim() ?? '';
     }
 
