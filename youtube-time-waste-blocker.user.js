@@ -13,7 +13,7 @@
     const SUBSCRIPTIONS_URL = 'https://www.youtube.com/feed/subscriptions';
 
     const CRITERIA = [
-        { whitelist: true, type: 'channel', keywords: ['Naroditsky', 'Chess Simp'] },
+        { whitelist: true, type: 'channel', keywords: ['Naroditsky', 'Chess Simp', 'Anna Rudolf'] },
         { whitelist: true, type: 'channelOrTitle', keywords: ['ASMR', 'Meditation', 'Singing Bowls', 'Exercise', 'Breathing', 'Mindfulness'] },
     ];
 
