@@ -1,0 +1,68 @@
+// ==UserScript==
+// @name        youtube-time-waste-blocker
+// @description Block YouTube videos that don't match whitelisted criteria
+// @version     1.0
+// @match       *://*.youtube.com/*
+// @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js
+// @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js
+// ==/UserScript==
+
+const SUBSCRIPTIONS_URL = 'https://www.youtube.com/feed/subscriptions';
+
+const CRITERIA = [
+    { type: 'channel', keywords: ['Naroditsky', 'Chess Simp'], whitelist: true },
+    { type: 'channelOrTitle', keywords: ['ASMR', 'Meditation', 'Singing Bowls'], whitelist: true },
+];
+
+function getVideoTitle() {
+    const el = document.querySelector('h1.ytd-watch-metadata yt-formatted-string');
+    return el?.textContent?.trim() ?? '';
+}
+
+function getChannelName() {
+    const el = document.querySelector('ytd-video-owner-renderer ytd-channel-name yt-formatted-string a');
+    return el?.textContent?.trim() ?? '';
+}
+
+function containsKeyword(text, keywords) {
+    const lower = text.toLowerCase();
+    return keywords.some((kw) => lower.includes(kw.toLowerCase()));
+}
+
+function matchesCriterion(channel, title, criterion) {
+    switch (criterion.type) {
+        case 'channel':
+            return containsKeyword(channel, criterion.keywords);
+        case 'channelOrTitle':
+            return containsKeyword(channel, criterion.keywords) || containsKeyword(title, criterion.keywords);
+        default:
+            return false;
+    }
+}
+
+function isAllowed(channel, title) {
+    const whitelisted = CRITERIA.filter((c) => c.whitelist).some((c) => matchesCriterion(channel, title, c));
+    const blacklisted = CRITERIA.filter((c) => !c.whitelist).some((c) => matchesCriterion(channel, title, c));
+    return whitelisted && !blacklisted;
+}
+
+function isWatchPage() {
+    return window.location.pathname === '/watch';
+}
+
+let lastCheckedUrl = '';
+
+setInterval(() => {
+    if (!isWatchPage()) return;
+    if (window.location.href === lastCheckedUrl) return;
+
+    const channel = getChannelName();
+    const title = getVideoTitle();
+    if (!channel && !title) return;
+
+    lastCheckedUrl = window.location.href;
+
+    if (!isAllowed(channel, title)) {
+        window.location.replace(SUBSCRIPTIONS_URL);
+    }
+}, 500);
