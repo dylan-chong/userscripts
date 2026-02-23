@@ -7,85 +7,87 @@
 // @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js
 // ==/UserScript==
 
-const REDIRECT_BLOCKED_VIDEOS = true;
-const REMOVE_SUGGESTED_VIDEOS = true;
-const SUBSCRIPTIONS_URL = 'https://www.youtube.com/feed/subscriptions';
+(function () {
+    const REDIRECT_BLOCKED_VIDEOS = true;
+    const REMOVE_SUGGESTED_VIDEOS = true;
+    const SUBSCRIPTIONS_URL = 'https://www.youtube.com/feed/subscriptions';
 
-const CRITERIA = [
-    { whitelist: true, type: 'channel', keywords: ['Naroditsky', 'Chess Simp'] },
-    { whitelist: true, type: 'channelOrTitle', keywords: ['ASMR', 'Meditation', 'Singing Bowls', 'Exercise', 'Breathing', 'Mindfulness'] },
-];
+    const CRITERIA = [
+        { whitelist: true, type: 'channel', keywords: ['Naroditsky', 'Chess Simp'] },
+        { whitelist: true, type: 'channelOrTitle', keywords: ['ASMR', 'Meditation', 'Singing Bowls', 'Exercise', 'Breathing', 'Mindfulness'] },
+    ];
 
-function getVideoTitle() {
-    const el = document.querySelector('h1.ytd-watch-metadata yt-formatted-string');
-    return el?.textContent?.trim() ?? '';
-}
-
-function getChannelName() {
-    const el = document.querySelector('ytd-video-owner-renderer ytd-channel-name yt-formatted-string a');
-    return el?.textContent?.trim() ?? '';
-}
-
-function containsKeyword(text, keywords) {
-    const lower = text.toLowerCase();
-    return keywords.some((kw) => lower.includes(kw.toLowerCase()));
-}
-
-function matchesCriterion(channel, title, criterion) {
-    switch (criterion.type) {
-        case 'channel':
-            return containsKeyword(channel, criterion.keywords);
-        case 'channelOrTitle':
-            return containsKeyword(channel, criterion.keywords) || containsKeyword(title, criterion.keywords);
-        default:
-            return false;
-    }
-}
-
-function isAllowed(channel, title) {
-    const whitelisted = CRITERIA.filter((c) => c.whitelist).some((c) => matchesCriterion(channel, title, c));
-    const blacklisted = CRITERIA.filter((c) => !c.whitelist).some((c) => matchesCriterion(channel, title, c));
-    return whitelisted && !blacklisted;
-}
-
-function isWatchPage() {
-    return window.location.pathname === '/watch';
-}
-
-function filterSuggestedVideos() {
-    document.querySelectorAll('ytd-compact-video-renderer').forEach((item) => {
-        const title = item.querySelector('#video-title')?.textContent?.trim() ?? '';
-        const channel = item.querySelector('ytd-channel-name yt-formatted-string')?.textContent?.trim() ?? '';
-        if (!title && !channel) return;
-        item.style.display = isAllowed(channel, title) ? '' : 'none';
-    });
-
-    document.querySelectorAll('yt-lockup-view-model').forEach((item) => {
-        const title = item.querySelector('.yt-lockup-metadata-view-model__title span')?.textContent?.trim() ?? '';
-        const channel = item.querySelector('.yt-content-metadata-view-model__metadata-row span')?.textContent?.trim() ?? '';
-        if (!title && !channel) return;
-        item.style.display = isAllowed(channel, title) ? '' : 'none';
-    });
-}
-
-let lastCheckedUrl = '';
-
-setInterval(() => {
-    if (!isWatchPage()) return;
-
-    if (REMOVE_SUGGESTED_VIDEOS) {
-        filterSuggestedVideos();
+    function getVideoTitle() {
+        const el = document.querySelector('h1.ytd-watch-metadata yt-formatted-string');
+        return el?.textContent?.trim() ?? '';
     }
 
-    if (REDIRECT_BLOCKED_VIDEOS && window.location.href !== lastCheckedUrl) {
-        const channel = getChannelName();
-        const title = getVideoTitle();
-        if (!channel && !title) return;
+    function getChannelName() {
+        const el = document.querySelector('ytd-video-owner-renderer ytd-channel-name yt-formatted-string a');
+        return el?.textContent?.trim() ?? '';
+    }
 
-        lastCheckedUrl = window.location.href;
+    function containsKeyword(text, keywords) {
+        const lower = text.toLowerCase();
+        return keywords.some((kw) => lower.includes(kw.toLowerCase()));
+    }
 
-        if (!isAllowed(channel, title)) {
-            window.location.replace(SUBSCRIPTIONS_URL);
+    function matchesCriterion(channel, title, criterion) {
+        switch (criterion.type) {
+            case 'channel':
+                return containsKeyword(channel, criterion.keywords);
+            case 'channelOrTitle':
+                return containsKeyword(channel, criterion.keywords) || containsKeyword(title, criterion.keywords);
+            default:
+                return false;
         }
     }
-}, 500);
+
+    function isAllowed(channel, title) {
+        const whitelisted = CRITERIA.filter((c) => c.whitelist).some((c) => matchesCriterion(channel, title, c));
+        const blacklisted = CRITERIA.filter((c) => !c.whitelist).some((c) => matchesCriterion(channel, title, c));
+        return whitelisted && !blacklisted;
+    }
+
+    function isWatchPage() {
+        return window.location.pathname === '/watch';
+    }
+
+    function filterSuggestedVideos() {
+        document.querySelectorAll('ytd-compact-video-renderer').forEach((item) => {
+            const title = item.querySelector('#video-title')?.textContent?.trim() ?? '';
+            const channel = item.querySelector('ytd-channel-name yt-formatted-string')?.textContent?.trim() ?? '';
+            if (!title && !channel) return;
+            item.style.display = isAllowed(channel, title) ? '' : 'none';
+        });
+
+        document.querySelectorAll('yt-lockup-view-model').forEach((item) => {
+            const title = item.querySelector('.yt-lockup-metadata-view-model__title span')?.textContent?.trim() ?? '';
+            const channel = item.querySelector('.yt-content-metadata-view-model__metadata-row span')?.textContent?.trim() ?? '';
+            if (!title && !channel) return;
+            item.style.display = isAllowed(channel, title) ? '' : 'none';
+        });
+    }
+
+    let lastCheckedUrl = '';
+
+    setInterval(() => {
+        if (!isWatchPage()) return;
+
+        if (REMOVE_SUGGESTED_VIDEOS) {
+            filterSuggestedVideos();
+        }
+
+        if (REDIRECT_BLOCKED_VIDEOS && window.location.href !== lastCheckedUrl) {
+            const channel = getChannelName();
+            const title = getVideoTitle();
+            if (!channel && !title) return;
+
+            lastCheckedUrl = window.location.href;
+
+            if (!isAllowed(channel, title)) {
+                window.location.replace(SUBSCRIPTIONS_URL);
+            }
+        }
+    }, 500);
+})();
