@@ -78,22 +78,19 @@
         updateBlockAutoplayButton();
     }
 
-    function setupVideoBlocking() {
+    function blockVideoNearEnd() {
+        const video = document.querySelector('video');
+        if (!video || video.paused) return;
+        if (!blockAutoplayEnabled || !isPlaylist() || userInitiatedSkip) return;
+        if (video.duration > 0 && video.duration - video.currentTime < 1.5) {
+            video.pause();
+        }
+    }
+
+    function setupVideoEndedListener() {
         const video = document.querySelector('video');
         if (!video || video._blockAutoplaySetup) return;
         video._blockAutoplaySetup = true;
-
-        video.addEventListener('timeupdate', () => {
-            console.log('[youtube-block-autoplay] timeupdate', {blockAutoplayEnabled, isPlaylist: isPlaylist(), userInitiatedSkip, videoPaused: video.paused});
-            if (!blockAutoplayEnabled || !isPlaylist() || userInitiatedSkip || video.paused) {
-                console.log('[youtube-block-autoplay] not blocking autoplay', {blockAutoplayEnabled, isPlaylist: isPlaylist(), userInitiatedSkip, videoPaused: video.paused});
-                return;
-            }
-            if (video.duration > 0 && video.duration - video.currentTime < 0.5) {
-                console.log('[youtube-block-autoplay] blocking autoplay', {blockAutoplayEnabled, isPlaylist: isPlaylist(), userInitiatedSkip, videoPaused: video.paused});
-                video.pause();
-            }
-        });
 
         video.addEventListener('ended', (e) => {
             if (!blockAutoplayEnabled || !isPlaylist() || userInitiatedSkip) {
@@ -137,10 +134,11 @@
     }, true);
 
     setInterval(() => {
+        blockVideoNearEnd();
         createBlockAutoplayButton();
         updateBlockAutoplayButton();
-        setupVideoBlocking();
+        setupVideoEndedListener();
         interceptPlayerNextVideo();
         setupNextButtonTracking();
-    }, 1000);
+    }, 250);
 })();
