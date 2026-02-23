@@ -7,11 +7,13 @@
 // @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js
 // ==/UserScript==
 
+const REDIRECT_BLOCKED_VIDEOS = true;
+const REMOVE_SUGGESTED_VIDEOS = true;
 const SUBSCRIPTIONS_URL = 'https://www.youtube.com/feed/subscriptions';
 
 const CRITERIA = [
-    { type: 'channel', keywords: ['Naroditsky', 'Chess Simp'], whitelist: true },
-    { type: 'channelOrTitle', keywords: ['ASMR', 'Meditation', 'Singing Bowls'], whitelist: true },
+    { whitelist: true, type: 'channel', keywords: ['Naroditsky', 'Chess Simp'] },
+    { whitelist: true, type: 'channelOrTitle', keywords: ['ASMR', 'Meditation', 'Singing Bowls', 'Exercise', 'Breathing', 'Mindfulness'] },
 ];
 
 function getVideoTitle() {
@@ -50,19 +52,40 @@ function isWatchPage() {
     return window.location.pathname === '/watch';
 }
 
+function filterSuggestedVideos() {
+    document.querySelectorAll('ytd-compact-video-renderer').forEach((item) => {
+        const title = item.querySelector('#video-title')?.textContent?.trim() ?? '';
+        const channel = item.querySelector('ytd-channel-name yt-formatted-string')?.textContent?.trim() ?? '';
+        if (!title && !channel) return;
+        item.style.display = isAllowed(channel, title) ? '' : 'none';
+    });
+
+    document.querySelectorAll('yt-lockup-view-model').forEach((item) => {
+        const title = item.querySelector('.yt-lockup-metadata-view-model__title span')?.textContent?.trim() ?? '';
+        const channel = item.querySelector('.yt-content-metadata-view-model__metadata-row span')?.textContent?.trim() ?? '';
+        if (!title && !channel) return;
+        item.style.display = isAllowed(channel, title) ? '' : 'none';
+    });
+}
+
 let lastCheckedUrl = '';
 
 setInterval(() => {
     if (!isWatchPage()) return;
-    if (window.location.href === lastCheckedUrl) return;
 
-    const channel = getChannelName();
-    const title = getVideoTitle();
-    if (!channel && !title) return;
+    if (REMOVE_SUGGESTED_VIDEOS) {
+        filterSuggestedVideos();
+    }
 
-    lastCheckedUrl = window.location.href;
+    if (REDIRECT_BLOCKED_VIDEOS && window.location.href !== lastCheckedUrl) {
+        const channel = getChannelName();
+        const title = getVideoTitle();
+        if (!channel && !title) return;
 
-    if (!isAllowed(channel, title)) {
-        window.location.replace(SUBSCRIPTIONS_URL);
+        lastCheckedUrl = window.location.href;
+
+        if (!isAllowed(channel, title)) {
+            window.location.replace(SUBSCRIPTIONS_URL);
+        }
     }
 }, 500);
