@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         Simple Dark Mode (Invert)
 // @namespace    http://tampermonkey.net/
-// @version      2.6
+// @version      2.7
 // @description  Apply dark mode to websites using color inversion with toggles
 // @author       You
 // @match        *://*/*
+// @run-at       document-start
 // @grant        none
 // @updateURL    https://raw.githubusercontent.com/dylan-chong/userscripts/main/dark-mode.user.js
 // @downloadURL  https://raw.githubusercontent.com/dylan-chong/userscripts/main/dark-mode.user.js
@@ -17,6 +18,7 @@
   let darkModeState = 'auto'; // 'auto', 'off', 'on'
   let buttonsOnRight = true;
   let darkModeStyle = null;
+  let preloadDimStyle = null;
   const domain = window.location.hostname;
 
   function getStorageKey(setting) {
@@ -190,6 +192,26 @@
     }
 
     return isDark;
+  }
+
+  function applyPreloadDim() {
+    if (darkModeState !== 'auto') return;
+    preloadDimStyle = document.createElement('style');
+    preloadDimStyle.id = 'dark-mode-preload-dim';
+    preloadDimStyle.textContent = `
+      html {
+        filter: brightness(0.25);
+        background-color: #000 !important;
+      }
+    `;
+    (document.head || document.documentElement).appendChild(preloadDimStyle);
+  }
+
+  function removePreloadDim() {
+    if (preloadDimStyle) {
+      preloadDimStyle.remove();
+      preloadDimStyle = null;
+    }
   }
 
   function applyDarkMode(force = false) {
@@ -409,6 +431,7 @@
 
   function init() {
     loadSettings();
+    applyPreloadDim();
 
     if (document.body) {
       createUI();
@@ -421,6 +444,12 @@
       });
       observer.observe(document.documentElement, { childList: true });
     }
+
+    setTimeout(() => {
+      removePreloadDim();
+      checkAndApplyDarkMode();
+      startPeriodicChecking();
+    }, 500);
   }
 
   function updateDarkModeButton() {
@@ -456,8 +485,6 @@
   }
 
   init();
-  checkAndApplyDarkMode();
-  startPeriodicChecking();
 
   window.isPageDark = isPageDark;
 })();
