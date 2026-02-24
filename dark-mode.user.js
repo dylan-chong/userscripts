@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Simple Dark Mode (Invert)
 // @namespace    http://tampermonkey.net/
-// @version      2.7
+// @version      2.8
 // @description  Apply dark mode to websites using color inversion with toggles
 // @author       You
 // @match        *://*/*
@@ -112,20 +112,16 @@
     return getColorBrightness(style.backgroundColor) ?? getGradientBrightness(style.backgroundImage);
   }
 
-  function getVisibleBrightness(el, compositedBrightness = 0, compositedAlpha = 0, layers = []) {
-    if (!el) {
-      if (compositedAlpha > 0.05) {
-        const whiteFill = 255 * (1 - compositedAlpha);
-        layers.push(`${'  '.repeat(layers.length)}<root> white fill, cumA=1.00`);
-        return { el: document.documentElement, brightness: compositedBrightness + whiteFill, layers };
-      }
-      layers.push(`${'  '.repeat(layers.length)}<root> default white`);
-      return { el: document.documentElement, brightness: 255, layers };
-    }
+  function getVisibleBrightness(elements) {
+    let compositedBrightness = 0;
+    let compositedAlpha = 0;
+    const layers = [];
 
-    const style = window.getComputedStyle(el);
-    const result = getBackgroundBrightness(style);
-    if (result) {
+    for (const el of elements) {
+      const style = window.getComputedStyle(el);
+      const result = getBackgroundBrightness(style);
+      if (!result) continue;
+
       const layerWeight = result.alpha * (1 - compositedAlpha);
       compositedBrightness += result.brightness * layerWeight;
       compositedAlpha += layerWeight;
@@ -135,7 +131,13 @@
       }
     }
 
-    return getVisibleBrightness(el.parentElement, compositedBrightness, compositedAlpha, layers);
+    if (compositedAlpha > 0.05) {
+      const whiteFill = 255 * (1 - compositedAlpha);
+      layers.push(`${'  '.repeat(layers.length)}<root> white fill, cumA=1.00`);
+      return { el: document.documentElement, brightness: compositedBrightness + whiteFill, layers };
+    }
+    layers.push(`${'  '.repeat(layers.length)}<root> default white`);
+    return { el: document.documentElement, brightness: 255, layers };
   }
 
   function hasDarkColorScheme() {
@@ -153,12 +155,12 @@
   function isPageDark({ log = false } = {}) {
     const t0 = performance.now();
     if (hasDarkColorScheme()) {
-      if (log) console.log(`[DarkMode] hasDarkColorScheme=true, skipping pixel sampling, took=${(performance.now() - t0).toFixed(1)}ms`);
+      if (log) console.info(`[DarkMode] hasDarkColorScheme=true, skipping pixel sampling, took=${(performance.now() - t0).toFixed(1)}ms`);
       return true;
     }
 
     const samplePoints = [];
-    const cols = 10;
+    const cols = 5;
     const rows = 5;
     
     for (let i = 0; i < cols; i++) {
@@ -171,10 +173,10 @@
 
     const samples = [];
     samplePoints.forEach(({ x, y }) => {
-      const el = document.elementFromPoint(x, y);
-      if (el) {
-        const result = getVisibleBrightness(el);
-        samples.push({ x, y, hitEl: el, ...result });
+      const elements = document.elementsFromPoint(x, y);
+      if (elements.length > 0) {
+        const result = getVisibleBrightness(elements);
+        samples.push({ x, y, hitEl: elements[0], ...result });
       }
     });
 
@@ -182,11 +184,11 @@
     const isDark = avgBrightness < 128;
 
     if (log) {
-      console.log(`[DarkMode] avgBrightness=${avgBrightness.toFixed(1)} isDark=${isDark} samples=${samples.length} took=${(performance.now() - t0).toFixed(1)}ms`);
+      console.info(`[DarkMode] avgBrightness=${avgBrightness.toFixed(1)} isDark=${isDark} samples=${samples.length} took=${(performance.now() - t0).toFixed(1)}ms`);
       for (const s of samples) {
-        console.log(`  (${Math.round(s.x)},${Math.round(s.y)}) brightness=${s.brightness.toFixed(1)} hit=<${s.hitEl.tagName.toLowerCase()}${s.hitEl.id ? '#' + s.hitEl.id : ''}${s.hitEl.className ? '.' + String(s.hitEl.className).split(' ')[0] : ''}>`);
+        console.info(`  (${Math.round(s.x)},${Math.round(s.y)}) brightness=${s.brightness.toFixed(1)} hit=<${s.hitEl.tagName.toLowerCase()}${s.hitEl.id ? '#' + s.hitEl.id : ''}${s.hitEl.className ? '.' + String(s.hitEl.className).split(' ')[0] : ''}>`);
         for (const layer of s.layers) {
-          console.log(`    ${layer}`);
+          console.info(`    ${layer}`);
         }
       }
     }
