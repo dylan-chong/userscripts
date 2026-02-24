@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Simple Dark Mode (Invert)
 // @namespace    http://tampermonkey.net/
-// @version      3.0
+// @version      3.1
 // @description  Apply dark mode to websites using color inversion with toggles
 // @author       You
 // @match        *://*/*
@@ -447,7 +447,7 @@
       removePreloadDim();
       checkAndApplyDarkMode();
       startPeriodicChecking();
-    }, 500);
+    }, 250);
   }
 
   function updateDarkModeButton() {
