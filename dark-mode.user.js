@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Simple Dark Mode (Invert)
 // @namespace    http://tampermonkey.net/
-// @version      3.1
+// @version      3.2
 // @description  Apply dark mode to websites using color inversion with toggles
 // @author       You
 // @match        *://*/*
@@ -156,8 +156,8 @@
     }
 
     const samplePoints = [];
-    const cols = 5;
-    const rows = 5;
+    const cols = 8;
+    const rows = 8;
     
     for (let i = 0; i < cols; i++) {
       for (let j = 0; j < rows; j++) {
