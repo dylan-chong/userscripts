@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        youtube-time-waste-blocker
 // @description Block YouTube videos that don't match whitelisted criteria
-// @version     1.0
+// @version     1.1
 // @match       *://*.youtube.com/*
 // @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js
 // @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js
@@ -13,7 +13,7 @@
     const SUBSCRIPTIONS_URL = 'https://www.youtube.com/feed/subscriptions';
 
     const CRITERIA = [
-        { whitelist: true, type: 'channelOrTitle', keywords: ['Naroditsky', 'Chess Simp', 'Anna Rudolf', 'ASMR', 'Meditation', 'Singing Bowls', 'Exercise', 'Breathing', 'Mindfulness', 'Master Raindrop'] },
+        { whitelist: true, type: 'channelOrTitle', keywords: ['Naroditsky', 'ASMR', 'Meditation', 'Singing Bowls', 'Exercise', 'Breathing', 'Mindfulness'] },
     ];
 
     function queryFirst(...selectors) {
