@@ -26,4 +26,5 @@ Use the [Userscripts](https://apps.apple.com/us/app/userscripts/id1463298887) ap
 | **PokerChipForum Viewed Listings Tracker** | Grey out viewed listings on PokerChipForum marketplace with image previews | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/poker-chip-forum-read-listings.user.js) |
 | **YouTube Time Waste Blocker** | Block YouTube videos that don't match whitelisted channel/title criteria | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js) |
 | **YouTube Block Playlist Autoplay** | Block playlist auto-advance while allowing manual next | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-block-autoplay.user.js) |
+| **YouTube No Subscriptions** | Redirects YouTube subscriptions page to a specific video | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-no-subscriptions.user.js) |
 | **Poker Clock Remove UI** | Removes extra UI elements from clock.poker for a cleaner view | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/poker-clock-remove-ui.user.js) |
