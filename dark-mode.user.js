@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Simple Dark Mode (Invert)
 // @namespace    http://tampermonkey.net/
-// @version      4.3
+// @version      4.4
 // @description  Apply dark mode to websites using color inversion with toggles
 // @author       You
 // @match        *://*/*
@@ -177,7 +177,7 @@
     const medianBrightness = sortedBrightness.length % 2 !== 0
       ? sortedBrightness[mid]
       : (sortedBrightness[mid - 1] + sortedBrightness[mid]) / 2;
-    const isDark = medianBrightness < 128;
+    const isDark = medianBrightness < 80;
 
     if (log) {
       console.info(`[DarkMode] medianBrightness=${medianBrightness.toFixed(1)} isDark=${isDark} samples=${samples.length} took=${(performance.now() - t0).toFixed(1)}ms`);
