@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Simple Dark Mode (Invert)
 // @namespace    http://tampermonkey.net/
-// @version      3.6
+// @version      3.7
 // @description  Apply dark mode to websites using color inversion with toggles
 // @author       You
 // @match        *://*/*
@@ -16,11 +16,13 @@
 
   const STORAGE_KEY = `darkmode_v2_${domain}`;
 
-  let settings = {
+  const DEFAULT_SETTINGS = {
     darkModeState: 'auto',
     imagesInverted: true,
     buttonsOnRight: true,
   };
+
+  let settings = {};
   let darkModeStyle = null;
   let preloadDimStyle = null;
   const domain = window.location.hostname;
@@ -37,20 +39,14 @@
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
-
-      const saved = JSON.parse(raw);
-      if (['auto', 'off', 'on'].includes(saved.darkModeState)) {
-        settings.darkModeState = saved.darkModeState;
-      }
-      if (typeof saved.imagesInverted === 'boolean') {
-        settings.imagesInverted = saved.imagesInverted;
-      }
-      if (typeof saved.buttonsOnRight === 'boolean') {
-        settings.buttonsOnRight = saved.buttonsOnRight;
-      }
+      settings = JSON.parse(raw);
     } catch (e) {
       console.error(e);
     }
+  }
+
+  function getSettings() {
+    return { ...DEFAULT_SETTINGS, ...settings };
   }
 
   function getColorBrightness(color) {
@@ -193,7 +189,7 @@
   }
 
   function applyPreloadDim() {
-    if (settings.darkModeState !== 'auto') return;
+    if (getSettings().darkModeState !== 'auto') return;
     preloadDimStyle = document.createElement('style');
     preloadDimStyle.id = 'dark-mode-preload-dim';
     preloadDimStyle.textContent = `
@@ -245,7 +241,7 @@
   }
 
   function updateImageInversion(style) {
-    if (settings.imagesInverted) {
+    if (getSettings().imagesInverted) {
       style.textContent = '';
     } else {
       style.textContent = `
@@ -322,7 +318,7 @@
   }
 
   function getMenuLeft() {
-    return settings.buttonsOnRight ? `calc(100vw - 52px)` : '16px';
+    return getSettings().buttonsOnRight ? `calc(100vw - 52px)` : '16px';
   }
 
   function updateMenuPosition() {
@@ -375,11 +371,11 @@
     menuContainer.appendChild(mainButton);
 
     const positionButton = createMenuButton(
-      settings.buttonsOnRight ? '←' : '→',
+      getSettings().buttonsOnRight ? '←' : '→',
       'Toggle button position',
       () => {
-        settings.buttonsOnRight = !settings.buttonsOnRight;
-        positionButton.textContent = settings.buttonsOnRight ? '←' : '→';
+        settings.buttonsOnRight = !getSettings().buttonsOnRight;
+        positionButton.textContent = getSettings().buttonsOnRight ? '←' : '→';
         updateMenuPosition();
         saveSettings();
       }
@@ -388,15 +384,16 @@
     positionButton.style.display = 'none';
     menuContainer.appendChild(positionButton);
 
+    const darkModeState = getSettings().darkModeState;
     const darkModeButton = createMenuButton(
-      getDarkModeIcon(settings.darkModeState),
-      getDarkModeTitle(settings.darkModeState),
+      getDarkModeIcon(darkModeState),
+      getDarkModeTitle(darkModeState),
       () => {
         const states = ['auto', 'off', 'on'];
-        const currentIndex = states.indexOf(settings.darkModeState);
+        const currentIndex = states.indexOf(darkModeState);
         settings.darkModeState = states[(currentIndex + 1) % 3];
-        darkModeButton.textContent = getDarkModeIcon(settings.darkModeState);
-        darkModeButton.title = getDarkModeTitle(settings.darkModeState);
+        darkModeButton.textContent = getDarkModeIcon(darkModeState);
+        darkModeButton.title = getDarkModeTitle(darkModeState);
         checkAndApplyDarkMode();
         saveSettings();
       }
@@ -406,18 +403,19 @@
     darkModeButton.style.display = 'none';
     menuContainer.appendChild(darkModeButton);
 
+    const imagesInverted = getSettings().imagesInverted;
     const imageButton = createMenuButton(
       '🖼️',
       'Toggle image/video inversion',
       () => {
-        settings.imagesInverted = !settings.imagesInverted;
+        settings.imagesInverted = !imagesInverted;
         updateImageInversion(imageStyle);
-        imageButton._targetOpacity = settings.imagesInverted ? '1' : '0.5';
+        imageButton._targetOpacity = imagesInverted ? '1' : '0.5';
         imageButton.style.opacity = imageButton._targetOpacity;
         saveSettings();
       }
     );
-    imageButton._targetOpacity = settings.imagesInverted ? '1' : '0.5';
+    imageButton._targetOpacity = imagesInverted ? '1' : '0.5';
     imageButton.style.opacity = imageButton._targetOpacity;
     imageButton.className = 'dm-child-btn';
     imageButton.style.display = 'none';
@@ -451,16 +449,18 @@
 
   function updateDarkModeButton() {
     const darkModeButton = document.getElementById('dark-mode-toggle');
+    const darkModeState = getSettings().darkModeState;
     if (darkModeButton) {
-      darkModeButton.textContent = getDarkModeIcon(settings.darkModeState);
-      darkModeButton.title = getDarkModeTitle(settings.darkModeState);
+      darkModeButton.textContent = getDarkModeIcon(darkModeState);
+      darkModeButton.title = getDarkModeTitle(darkModeState);
     }
   }
 
   function checkAndApplyDarkMode() {
-    if (settings.darkModeState === 'on') {
+    const darkModeState = getSettings().darkModeState;
+    if (darkModeState === 'on') {
       applyDarkMode(true);
-    } else if (settings.darkModeState === 'off') {
+    } else if (darkModeState === 'off') {
       removeDarkMode();
     } else {
       const alreadyDark = isPageDark();
