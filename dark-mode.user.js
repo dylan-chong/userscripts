@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Simple Dark Mode (Invert)
 // @namespace    http://tampermonkey.net/
-// @version      4.0
+// @version      4.1
 // @description  Apply dark mode to websites using color inversion with toggles
 // @author       You
 // @match        *://*/*
@@ -14,6 +14,7 @@
 (function () {
   'use strict';
 
+  const domain = window.location.hostname;
   const STORAGE_KEY = `darkmode_v3_${domain}`;
 
   const DEFAULT_SETTINGS = {
@@ -25,7 +26,6 @@
   let settings = {};
   let darkModeStyle = null;
   let preloadDimStyle = null;
-  const domain = window.location.hostname;
 
   function saveSettings() {
     try {
