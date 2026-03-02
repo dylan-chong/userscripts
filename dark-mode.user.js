@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Simple Dark Mode (Invert)
 // @namespace    http://tampermonkey.net/
-// @version      4.2
+// @version      4.3
 // @description  Apply dark mode to websites using color inversion with toggles
 // @author       You
 // @match        *://*/*
@@ -172,11 +172,15 @@
       }
     });
 
-    const avgBrightness = samples.reduce((sum, s) => sum + s.brightness, 0) / samples.length;
-    const isDark = avgBrightness < 128;
+    const sortedBrightness = samples.map(s => s.brightness).sort((a, b) => a - b);
+    const mid = Math.floor(sortedBrightness.length / 2);
+    const medianBrightness = sortedBrightness.length % 2 !== 0
+      ? sortedBrightness[mid]
+      : (sortedBrightness[mid - 1] + sortedBrightness[mid]) / 2;
+    const isDark = medianBrightness < 128;
 
     if (log) {
-      console.info(`[DarkMode] avgBrightness=${avgBrightness.toFixed(1)} isDark=${isDark} samples=${samples.length} took=${(performance.now() - t0).toFixed(1)}ms`);
+      console.info(`[DarkMode] medianBrightness=${medianBrightness.toFixed(1)} isDark=${isDark} samples=${samples.length} took=${(performance.now() - t0).toFixed(1)}ms`);
       for (const s of samples) {
         console.info(`  (${Math.round(s.x)},${Math.round(s.y)}) brightness=${s.brightness.toFixed(1)} hit=<${s.hitEl.tagName.toLowerCase()}${s.hitEl.id ? '#' + s.hitEl.id : ''}${s.hitEl.className ? '.' + String(s.hitEl.className).split(' ')[0] : ''}>`);
         for (const layer of s.layers) {
