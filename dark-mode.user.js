@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Simple Dark Mode (Invert)
 // @namespace    http://tampermonkey.net/
-// @version      4.1
+// @version      4.2
 // @description  Apply dark mode to websites using color inversion with toggles
 // @author       You
 // @match        *://*/*
@@ -384,16 +384,15 @@
     positionButton.style.display = 'none';
     menuContainer.appendChild(positionButton);
 
-    const darkModeState = getSettings().darkModeState;
     const darkModeButton = createMenuButton(
-      getDarkModeIcon(darkModeState),
-      getDarkModeTitle(darkModeState),
+      getDarkModeIcon(getSettings().darkModeState),
+      getDarkModeTitle(getSettings().darkModeState),
       () => {
         const states = ['auto', 'off', 'on'];
-        const currentIndex = states.indexOf(darkModeState);
+        const currentIndex = states.indexOf(getSettings().darkModeState);
         settings.darkModeState = states[(currentIndex + 1) % 3];
-        darkModeButton.textContent = getDarkModeIcon(darkModeState);
-        darkModeButton.title = getDarkModeTitle(darkModeState);
+        darkModeButton.textContent = getDarkModeIcon(getSettings().darkModeState);
+        darkModeButton.title = getDarkModeTitle(getSettings().darkModeState);
         checkAndApplyDarkMode();
         saveSettings();
       }
@@ -403,19 +402,18 @@
     darkModeButton.style.display = 'none';
     menuContainer.appendChild(darkModeButton);
 
-    const imagesInverted = getSettings().imagesInverted;
     const imageButton = createMenuButton(
       '🖼️',
       'Toggle image/video inversion',
       () => {
-        settings.imagesInverted = !imagesInverted;
+        settings.imagesInverted = !getSettings().imagesInverted;
         updateImageInversion(imageStyle);
-        imageButton._targetOpacity = imagesInverted ? '1' : '0.5';
+        imageButton._targetOpacity = getSettings().imagesInverted ? '1' : '0.5';
         imageButton.style.opacity = imageButton._targetOpacity;
         saveSettings();
       }
     );
-    imageButton._targetOpacity = imagesInverted ? '1' : '0.5';
+    imageButton._targetOpacity = getSettings().imagesInverted ? '1' : '0.5';
     imageButton.style.opacity = imageButton._targetOpacity;
     imageButton.className = 'dm-child-btn';
     imageButton.style.display = 'none';
