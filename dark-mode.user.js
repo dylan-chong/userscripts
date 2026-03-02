@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Simple Dark Mode (Invert)
 // @namespace    http://tampermonkey.net/
-// @version      3.4
+// @version      3.5
 // @description  Apply dark mode to websites using color inversion with toggles
 // @author       You
 // @match        *://*/*
@@ -16,7 +16,7 @@
 
   let settings = {
     darkModeState: 'auto',
-    imagesInverted: false,
+    imagesInverted: true,
     buttonsOnRight: true,
   };
   let darkModeStyle = null;
@@ -225,11 +225,7 @@
         background-color: #fff;
       }
       
-      iframe,
-      img,
-      video,
-      [style*="background-image"],
-      *[style*="background-image"] {
+      iframe {
         filter: invert(1) hue-rotate(180deg) !important;
       }
     `;
