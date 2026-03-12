@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Simple Dark Mode (Invert)
 // @namespace    http://tampermonkey.net/
-// @version      4.6
+// @version      5.0
 // @description  Apply dark mode to websites using color inversion with toggles
 // @author       You
 // @match        *://*/*
@@ -15,11 +15,11 @@
   'use strict';
 
   const domain = window.location.hostname;
-  const STORAGE_KEY = `darkmode_v3_${domain}`;
+  const STORAGE_KEY = `darkmode_v4_${domain}`;
 
   const DEFAULT_SETTINGS = {
     darkModeState: 'auto',
-    imagesInverted: true,
+    imagesInverted: false,
     buttonsOnRight: true,
   };
 
@@ -211,9 +211,12 @@
 
   function applyDarkMode(force = false) {
     if (!darkModeStyle) {
-      darkModeStyle = document.createElement('style');
-      darkModeStyle.id = 'simple-dark-mode-invert';
-      document.head.appendChild(darkModeStyle);
+      darkModeStyle = document.getElementById('simple-dark-mode-invert');
+      if (!darkModeStyle) {
+        darkModeStyle = document.createElement('style');
+        darkModeStyle.id = 'simple-dark-mode-invert';
+        document.head.appendChild(darkModeStyle);
+      }
     }
 
     darkModeStyle.textContent = `
@@ -241,8 +244,17 @@
     return style;
   }
 
+  function isDarkModeActive() {
+    const el = darkModeStyle || document.getElementById('simple-dark-mode-invert');
+    return !!el && el.textContent !== '';
+  }
+
   function updateImageInversion(style) {
-    if (getSettings().imagesInverted) {
+    const { imagesInverted } = getSettings();
+    const isDark = isDarkModeActive();
+    const shouldInvert = isDark ? imagesInverted : !imagesInverted;
+    console.warn('######### updateImageInversion', {imagesInverted,isDark,shouldInvert})
+    if (shouldInvert) {
       style.textContent = '';
     } else {
       style.textContent = `
@@ -353,7 +365,6 @@
     if (!imageStyle) {
       imageStyle = createImageInvertStyle();
     }
-    updateImageInversion(imageStyle);
 
     menuContainer = document.createElement('div');
     menuContainer.id = 'dark-mode-menu';
@@ -470,6 +481,9 @@
       }
     }
     updateDarkModeButton();
+    if (imageStyle) {
+      updateImageInversion(imageStyle);
+    }
   }
 
   function startPeriodicChecking() {
