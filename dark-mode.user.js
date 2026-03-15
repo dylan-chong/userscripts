@@ -253,7 +253,6 @@
     const { imagesInverted } = getSettings();
     const isDark = isDarkModeActive();
     const shouldInvert = isDark ? imagesInverted : !imagesInverted;
-    console.warn('######### updateImageInversion', {imagesInverted,isDark,shouldInvert})
     if (shouldInvert) {
       style.textContent = '';
     } else {
