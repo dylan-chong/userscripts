@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Simple Dark Mode (Invert)
 // @namespace    http://tampermonkey.net/
-// @version      5.0
+// @version      5.1
 // @description  Apply dark mode to websites using color inversion with toggles
 // @author       You
 // @match        *://*/*
@@ -209,6 +209,17 @@
     }
   }
 
+  const DARK_MODE_CSS = `
+      html {
+        filter: invert(1) hue-rotate(180deg);
+        background-color: #fff;
+      }
+
+      iframe {
+        filter: invert(1) hue-rotate(180deg) !important;
+      }
+    `;
+
   function applyDarkMode(force = false) {
     if (!darkModeStyle) {
       darkModeStyle = document.getElementById('simple-dark-mode-invert');
@@ -219,20 +230,12 @@
       }
     }
 
-    darkModeStyle.textContent = `
-      html {
-        filter: invert(1) hue-rotate(180deg);
-        background-color: #fff;
-      }
-      
-      iframe {
-        filter: invert(1) hue-rotate(180deg) !important;
-      }
-    `;
+    if (darkModeStyle.textContent === DARK_MODE_CSS) return;
+    darkModeStyle.textContent = DARK_MODE_CSS;
   }
 
   function removeDarkMode() {
-    if (darkModeStyle) {
+    if (darkModeStyle && darkModeStyle.textContent !== '') {
       darkModeStyle.textContent = '';
     }
   }
@@ -249,14 +252,7 @@
     return !!el && el.textContent !== '';
   }
 
-  function updateImageInversion(style) {
-    const { imagesInverted } = getSettings();
-    const isDark = isDarkModeActive();
-    const shouldInvert = isDark ? imagesInverted : !imagesInverted;
-    if (shouldInvert) {
-      style.textContent = '';
-    } else {
-      style.textContent = `
+  const IMAGE_INVERT_CSS = `
         img,
         video,
         [style*="background-image"],
@@ -264,7 +260,14 @@
           filter: invert(1) hue-rotate(180deg) !important;
         }
       `;
-    }
+
+  function updateImageInversion(style) {
+    const { imagesInverted } = getSettings();
+    const isDark = isDarkModeActive();
+    const shouldInvert = isDark ? imagesInverted : !imagesInverted;
+    const newContent = shouldInvert ? '' : IMAGE_INVERT_CSS;
+    if (style.textContent === newContent) return;
+    style.textContent = newContent;
   }
 
   const BUTTON_STYLE = `
