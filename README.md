@@ -21,6 +21,7 @@ Use the [Userscripts](https://apps.apple.com/us/app/userscripts/id1463298887) ap
 | Script | Description | Install |
 |--------|-------------|---------|
 | **Facebook No Feed** | Hides the Facebook news feed and shows a "Don't waste time" message | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/facebook-no-feed.user.js) |
+| **OAuth Auto-Close** | Auto-close OAuth callback tab after "You can now close this tab." message | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/oauth-auto-close.user.js) |
 | **Poker Clock Remove UI** | Removes extra UI elements from clock.poker for a cleaner view | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/poker-clock-remove-ui.user.js) |
 | **PokerChipForum Viewed Listings Tracker** | Grey out viewed listings on PokerChipForum marketplace with image previews | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/poker-chip-forum-read-listings.user.js) |
 | **Simple Dark Mode (Invert)** | Apply dark mode to any website using color inversion with toggles | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/dark-mode.user.js) |
