@@ -13,7 +13,7 @@
     const SUBSCRIPTIONS_URL = 'https://www.youtube.com/feed/subscriptions';
 
     const CRITERIA = [
-        { whitelist: true, type: 'channelOrTitle', keywords: ['Naroditsky', 'ASMR', 'Meditation', 'Singing Bowls', 'Exercise', 'Breathing', 'Mindfulness'] },
+        { whitelist: true, type: 'channelOrTitle', keywords: ['Naroditsky', 'ASMR', 'Meditation', 'Singing Bowls', 'Exercise', 'Breathing', 'Mindfulness', 'Workout'] },
     ];
 
     function queryFirst(...selectors) {
