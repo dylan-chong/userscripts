@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        youtube-time-waste-blocker
 // @description Block YouTube videos that don't match whitelisted criteria
-// @version     1.1
+// @version     1.2
 // @match       *://*.youtube.com/*
 // @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js
 // @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js
@@ -25,6 +25,13 @@
     }
 
     function getVideoTitle() {
+        // Primary: use document.title (works on all platforms)
+        const titleFromDoc = document.title.replace(/ - YouTube$/, '');
+        if (titleFromDoc && titleFromDoc !== document.title) {
+            return titleFromDoc;
+        }
+
+        // Fallback: existing DOM selectors
         const el = queryFirst(
             'h1.ytd-watch-metadata yt-formatted-string',
             'h2.slim-video-information-title .yt-core-attributed-string',
@@ -33,6 +40,13 @@
     }
 
     function getChannelName() {
+        // Primary: meta tag (works on all platforms)
+        const metaChannel = document.querySelector('meta[itemprop="name"]');
+        if (metaChannel?.content?.trim()) {
+            return metaChannel.content.trim();
+        }
+
+        // Fallback: DOM selectors
         const el = queryFirst(
             'ytd-video-owner-renderer ytd-channel-name yt-formatted-string a',
             'ytm-slim-owner-renderer .slim-owner-icon-and-title .yt-core-attributed-string',
