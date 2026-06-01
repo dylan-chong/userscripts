@@ -30,3 +30,19 @@ Use the [Userscripts](https://apps.apple.com/us/app/userscripts/id1463298887) ap
 | **YouTube No Subscriptions** | Redirects YouTube subscriptions page to a specific video | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-no-subscriptions.user.js) |
 | **YouTube Redirect** | Redirects YouTube home to subscriptions feed and converts Shorts to regular videos | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-redirect.user.js) |
 | **YouTube Time Waste Blocker** | Block YouTube videos that don't match whitelisted channel/title criteria | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js) |
+
+
+## Install all
+
+```
+open https://raw.githubusercontent.com/dylan-chong/userscripts/main/facebook-no-feed.user.js
+open https://raw.githubusercontent.com/dylan-chong/userscripts/main/oauth-auto-close.user.js
+open https://raw.githubusercontent.com/dylan-chong/userscripts/main/poker-clock-remove-ui.user.js
+open https://raw.githubusercontent.com/dylan-chong/userscripts/main/poker-chip-forum-read-listings.user.js
+open https://raw.githubusercontent.com/dylan-chong/userscripts/main/dark-mode.user.js
+open https://raw.githubusercontent.com/dylan-chong/userscripts/main/watch-south-park-popup-blocker.user.js
+open https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-block-autoplay.user.js
+open https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-no-subscriptions.user.js
+open https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-redirect.user.js
+open https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js
+```
