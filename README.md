@@ -20,6 +20,7 @@ Use the [Userscripts](https://apps.apple.com/us/app/userscripts/id1463298887) ap
 
 | Script | Description | Install |
 |--------|-------------|---------|
+| **Chess Quadrant Lines** | Draw black lines splitting the chess.com board into quadrants | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/chess-quadrant-lines.user.js) |
 | **Facebook No Feed** | Hides the Facebook news feed and shows a "Don't waste time" message | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/facebook-no-feed.user.js) |
 | **OAuth Auto-Close** | Auto-close OAuth callback tab after "You can now close this tab." message | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/oauth-auto-close.user.js) |
 | **Poker Clock Remove UI** | Removes extra UI elements from clock.poker for a cleaner view | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/poker-clock-remove-ui.user.js) |
@@ -35,6 +36,7 @@ Use the [Userscripts](https://apps.apple.com/us/app/userscripts/id1463298887) ap
 ## Install all
 
 ```
+open https://raw.githubusercontent.com/dylan-chong/userscripts/main/chess-quadrant-lines.user.js
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/facebook-no-feed.user.js
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/oauth-auto-close.user.js
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/poker-clock-remove-ui.user.js
