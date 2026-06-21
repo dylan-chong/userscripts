@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        chess-quadrant-lines
 // @description Draw black lines splitting the chess.com board into quadrants
-// @version     1.0
+// @version     1.1
 // @match       *://*.chess.com/*
 // @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/chess-quadrant-lines.user.js
 // @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/chess-quadrant-lines.user.js
@@ -32,7 +32,7 @@
             Object.assign(line.style, {
                 top: '0',
                 left: '50%',
-                width: '4px',
+                width: '6px',
                 height: '100%',
                 transform: 'translateX(-50%)',
             });
