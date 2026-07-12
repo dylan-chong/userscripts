@@ -7,7 +7,7 @@
 // @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-no-subscriptions.user.js
 // ==/UserScript==
 
-const REDIRECT_URL = 'https://www.youtube.com/watch?v=b1iq8y9Tvd4';
+const REDIRECT_URL = 'https://www.youtube.com/watch?v=MK3lB-uY0gE';
 
 let lastRedirectedAt = 0;
 
