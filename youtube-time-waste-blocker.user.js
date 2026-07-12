@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        youtube-time-waste-blocker
 // @description Block or gate YouTube videos based on deny/delay/permit categories
-// @version     2.0
+// @version     2.1
 // @match       *://*.youtube.com/*
 // @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js
 // @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js
@@ -9,10 +9,11 @@
 
 (function () {
     const SUBSCRIPTIONS_URL = 'https://www.youtube.com/feed/subscriptions';
+    const MEDITATION_VIDEO_URL = 'https://www.youtube.com/watch?v=MK3lB-uY0gE';
 
     const CRITERIA = [
-        { action: 'permit', type: 'channelOrTitle', keywords: ['Meditation', 'Singing Bowls', 'ASMR', 'Exercise', 'Breathing', 'Mindfulness', 'Workout'] },
         { action: 'delay', type: 'channelOrTitle', keywords: ['Naroditsky', 'Mini Motorways'] },
+        { action: 'permit', type: 'channelOrTitle', keywords: ['Meditation', 'Singing Bowls', 'ASMR', 'Exercise', 'Breathing', 'Mindfulness', 'Workout'] },
     ];
 
     const BREATHING_PATTERNS = [
@@ -45,15 +46,15 @@
     }
 
     function getChannelName() {
-        const metaChannel = document.querySelector('meta[itemprop="name"]');
-        if (metaChannel?.content?.trim()) {
-            return metaChannel.content.trim();
-        }
         const el = queryFirst(
             'ytd-video-owner-renderer ytd-channel-name yt-formatted-string a',
             'ytm-slim-owner-renderer .slim-owner-icon-and-title .yt-core-attributed-string',
         );
-        return el?.textContent?.trim() ?? '';
+        if (el?.textContent?.trim()) {
+            return el.textContent.trim();
+        }
+        const metaChannel = document.querySelector('span[itemprop="author"] link[itemprop="name"]');
+        return metaChannel?.getAttribute('content')?.trim() ?? '';
     }
 
     function containsKeyword(text, keywords) {
@@ -114,8 +115,14 @@
         overlay.appendChild(instruction);
 
         var progress = document.createElement('div');
-        progress.style.cssText = 'font-size:1rem;opacity:0.5;';
+        progress.style.cssText = 'font-size:1rem;opacity:0.5;margin-bottom:2rem;';
         overlay.appendChild(progress);
+
+        var meditationLink = document.createElement('a');
+        meditationLink.href = MEDITATION_VIDEO_URL;
+        meditationLink.textContent = 'Or meditate with singing bowls instead';
+        meditationLink.style.cssText = 'color:rgba(255,255,255,0.5);font-size:0.9rem;text-decoration:underline;cursor:pointer;';
+        overlay.appendChild(meditationLink);
 
         document.body.appendChild(overlay);
         activeOverlay = overlay;
@@ -180,10 +187,39 @@
     }
 
     function completeExercise(overlay) {
-        completedUrls.add(window.location.href);
-        overlay.remove();
-        activeOverlay = null;
-        playVideo();
+        overlay.innerHTML = '';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;color:#fff;';
+
+        var msg = document.createElement('div');
+        msg.style.cssText = 'font-size:1.5rem;margin-bottom:2rem;';
+        msg.textContent = 'Consider meditating instead';
+        overlay.appendChild(msg);
+
+        var link = document.createElement('a');
+        link.href = MEDITATION_VIDEO_URL;
+        link.textContent = 'Open singing bowls meditation';
+        link.style.cssText = 'color:#7cb3ff;font-size:1.2rem;text-decoration:underline;margin-bottom:2rem;';
+        overlay.appendChild(link);
+
+        var countdown = document.createElement('div');
+        countdown.style.cssText = 'font-size:1rem;opacity:0.5;';
+        overlay.appendChild(countdown);
+
+        var remaining = 15;
+        countdown.textContent = 'Video available in ' + remaining + 's';
+
+        var timer = setInterval(function () {
+            remaining--;
+            if (remaining <= 0) {
+                clearInterval(timer);
+                completedUrls.add(window.location.href);
+                overlay.remove();
+                activeOverlay = null;
+                playVideo();
+            } else {
+                countdown.textContent = 'Video available in ' + remaining + 's';
+            }
+        }, 1000);
     }
 
     let lastCheckedUrl = '';
