@@ -21,6 +21,7 @@ Use the [Userscripts](https://apps.apple.com/us/app/userscripts/id1463298887) ap
 | Script | Description | Install |
 |--------|-------------|---------|
 | **Chess Quadrant Lines** | Draw black lines splitting the chess.com board into quadrants | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/chess-quadrant-lines.user.js) |
+| **Facebook Messenger No Header** | Hides the header bar on messenger.com to remove notifications and marketplace | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/facebook-messenger-no-header.user.js) |
 | **Facebook No Feed** | Hides the Facebook news feed and shows a "Don't waste time" message | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/facebook-no-feed.user.js) |
 | **OAuth Auto-Close** | Auto-close OAuth callback tab after "You can now close this tab." message | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/oauth-auto-close.user.js) |
 | **Poker Clock Remove UI** | Removes extra UI elements from clock.poker for a cleaner view | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/poker-clock-remove-ui.user.js) |
@@ -30,13 +31,16 @@ Use the [Userscripts](https://apps.apple.com/us/app/userscripts/id1463298887) ap
 | **YouTube Block Playlist Autoplay** | Block playlist auto-advance while allowing manual next | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-block-autoplay.user.js) |
 | **YouTube No Subscriptions** | Redirects YouTube subscriptions page to a specific video | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-no-subscriptions.user.js) |
 | **YouTube Redirect** | Redirects YouTube home to subscriptions feed and converts Shorts to regular videos | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-redirect.user.js) |
-| **YouTube Time Waste Blocker** | Block YouTube videos that don't match whitelisted channel/title criteria | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js) |
+| **YouTube No Comments** | Hide all YouTube comments on desktop and mobile | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-no-comments.user.js) |
+| **YouTube No Suggestions** | Remove all YouTube video suggestions (sidebar, homepage, end screen) | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-no-suggestions.user.js) |
+| **YouTube Time Waste Blocker** | Block or gate YouTube videos with deny/delay/permit categories and breathing exercises | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js) |
 
 
 ## Install all
 
 ```
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/chess-quadrant-lines.user.js
+open https://raw.githubusercontent.com/dylan-chong/userscripts/main/facebook-messenger-no-header.user.js
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/facebook-no-feed.user.js
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/oauth-auto-close.user.js
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/poker-clock-remove-ui.user.js
@@ -46,5 +50,7 @@ open https://raw.githubusercontent.com/dylan-chong/userscripts/main/watch-south-
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-block-autoplay.user.js
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-no-subscriptions.user.js
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-redirect.user.js
+open https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-no-comments.user.js
+open https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-no-suggestions.user.js
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js
 ```
