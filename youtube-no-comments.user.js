@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        youtube-no-comments
 // @description Hide all YouTube comments on desktop and mobile
-// @version     1.2
+// @version     1.3
 // @match       *://*.youtube.com/*
 // @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-no-comments.user.js
 // @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-no-comments.user.js
@@ -16,7 +16,7 @@
         });
 
         document.querySelectorAll('yt-video-metadata-carousel-view-model').forEach(function (el) {
-            if (el.querySelector('yt-comment-teaser-carousel-item-view-model')) {
+            if (el.querySelector('yt-comment-teaser-carousel-item-view-model, yt-comment-input-box-carousel-item-view-model')) {
                 el.style.display = 'none';
             }
         });
