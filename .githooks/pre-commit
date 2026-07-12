@@ -1,0 +1,19 @@
+#!/bin/bash
+
+failed=0
+
+for file in $(git diff --cached --name-only --diff-filter=M | grep '\.user\.js$'); do
+    old_version=$(git show HEAD:"$file" 2>/dev/null | grep -m1 '@version' | sed 's/.*@version[[:space:]]*//')
+    new_version=$(git show :"$file" | grep -m1 '@version' | sed 's/.*@version[[:space:]]*//')
+
+    if [ -z "$old_version" ]; then
+        continue
+    fi
+
+    if [ "$old_version" = "$new_version" ]; then
+        echo "ERROR: $file has unchanged @version ($old_version). Please bump the version."
+        failed=1
+    fi
+done
+
+exit $failed
