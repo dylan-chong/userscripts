@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        youtube-time-waste-blocker
 // @description Block or gate YouTube videos based on deny/delay/permit categories
-// @version     2.1
+// @version     2.2
 // @match       *://*.youtube.com/*
 // @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js
 // @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js
@@ -187,7 +187,7 @@
     }
 
     function completeExercise(overlay) {
-        overlay.innerHTML = '';
+        while (overlay.firstChild) overlay.removeChild(overlay.firstChild);
         overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;color:#fff;';
 
         var msg = document.createElement('div');
