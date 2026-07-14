@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Simple Dark Mode (Invert)
 // @namespace    http://tampermonkey.net/
-// @version      5.1
+// @version      6.0
 // @description  Apply dark mode to websites using color inversion with toggles
 // @author       You
 // @match        *://*/*
@@ -20,7 +20,6 @@
   const DEFAULT_SETTINGS = {
     darkModeState: 'auto',
     imagesInverted: false,
-    buttonsOnRight: true,
   };
 
   let settings = {};
@@ -270,34 +269,7 @@
     style.textContent = newContent;
   }
 
-  const BUTTON_STYLE = `
-    all: initial;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    padding: 0;
-    margin: 0;
-    border-radius: 50%;
-    border: 2px solid #666;
-    background-color: #333;
-    color: #fff;
-    font-family: system-ui, sans-serif;
-    font-size: 16px;
-    font-weight: normal;
-    line-height: 1;
-    text-align: center;
-    text-transform: none;
-    letter-spacing: normal;
-    text-indent: 0;
-    text-decoration: none;
-    cursor: pointer;
-    z-index: 999999;
-    box-sizing: border-box;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-    transition: all 0.2s ease;
-  `;
+  let imageStyle = null;
 
   function getDarkModeIcon(state) {
     switch (state) {
@@ -317,91 +289,20 @@
     }
   }
 
-  let menuOpen = false;
-  let menuContainer = null;
-  let imageStyle = null;
+  let darkModeButton = null;
 
-  function createMenuButton(text, title, onClick) {
-    const button = document.createElement('button');
-    button.textContent = text;
-    button.title = title;
-    button.style.cssText = BUTTON_STYLE;
-    button.addEventListener('mouseenter', () => { button.style.transform = 'translateY(0) scale(1.1)'; });
-    button.addEventListener('mouseleave', () => { button.style.transform = 'translateY(0) scale(1)'; });
-    button.addEventListener('click', onClick);
-    return button;
-  }
+  function registerMenuButtons() {
+    var menu = window.__userscriptFloatingMenu;
+    if (!menu) return;
 
-  function getMenuLeft() {
-    return getSettings().buttonsOnRight ? `calc(100vw - 52px)` : '16px';
-  }
-
-  function updateMenuPosition() {
-    if (!menuContainer) return;
-    menuContainer.style.left = getMenuLeft();
-  }
-
-  function toggleMenu() {
-    menuOpen = !menuOpen;
-    const childButtons = menuContainer.querySelectorAll('.dm-child-btn');
-    childButtons.forEach((btn, i) => {
-      if (menuOpen) {
-        btn.style.display = 'block';
-        btn.style.opacity = '0';
-        btn.style.transform = 'translateY(10px) scale(0.8)';
-        requestAnimationFrame(() => {
-          btn.style.transition = `opacity 0.2s ease ${i * 0.05}s, transform 0.2s ease ${i * 0.05}s`;
-          btn.style.opacity = btn._targetOpacity || '1';
-          btn.style.transform = 'translateY(0) scale(1)';
-        });
-      } else {
-        btn.style.transition = 'opacity 0.15s ease, transform 0.15s ease';
-        btn.style.opacity = '0';
-        btn.style.transform = 'translateY(10px) scale(0.8)';
-        setTimeout(() => { btn.style.display = 'none'; }, 150);
-      }
-    });
-  }
-
-  function createUI() {
     if (!imageStyle) {
       imageStyle = createImageInvertStyle();
     }
 
-    menuContainer = document.createElement('div');
-    menuContainer.id = 'dark-mode-menu';
-    menuContainer.style.cssText = `
-      position: fixed;
-      bottom: 16px;
-      left: ${getMenuLeft()};
-      display: flex;
-      flex-direction: column-reverse;
-      gap: 8px;
-      z-index: 999999;
-      transition: left 0.3s ease;
-    `;
-
-    const mainButton = createMenuButton('⚙', 'Dark mode settings', toggleMenu);
-    menuContainer.appendChild(mainButton);
-
-    const positionButton = createMenuButton(
-      getSettings().buttonsOnRight ? '←' : '→',
-      'Toggle button position',
-      () => {
-        settings.buttonsOnRight = !getSettings().buttonsOnRight;
-        positionButton.textContent = getSettings().buttonsOnRight ? '←' : '→';
-        updateMenuPosition();
-        saveSettings();
-      }
-    );
-    positionButton.className = 'dm-child-btn';
-    positionButton.style.display = 'none';
-    menuContainer.appendChild(positionButton);
-
-    const darkModeButton = createMenuButton(
+    darkModeButton = menu.addButton(
       getDarkModeIcon(getSettings().darkModeState),
       getDarkModeTitle(getSettings().darkModeState),
-      () => {
+      function () {
         const states = ['auto', 'off', 'on'];
         const currentIndex = states.indexOf(getSettings().darkModeState);
         settings.darkModeState = states[(currentIndex + 1) % 3];
@@ -411,48 +312,32 @@
         saveSettings();
       }
     );
-    darkModeButton.id = 'dark-mode-toggle';
-    darkModeButton.className = 'dm-child-btn';
-    darkModeButton.style.display = 'none';
-    menuContainer.appendChild(darkModeButton);
 
-    const imageButton = createMenuButton(
+    var imageButton = menu.addButton(
       '🖼️',
       'Toggle image/video inversion',
-      () => {
+      function () {
         settings.imagesInverted = !getSettings().imagesInverted;
         updateImageInversion(imageStyle);
         imageButton._targetOpacity = getSettings().imagesInverted ? '1' : '0.5';
         imageButton.style.opacity = imageButton._targetOpacity;
         saveSettings();
-      }
+      },
+      { opacity: getSettings().imagesInverted ? '1' : '0.5' }
     );
-    imageButton._targetOpacity = getSettings().imagesInverted ? '1' : '0.5';
-    imageButton.style.opacity = imageButton._targetOpacity;
-    imageButton.className = 'dm-child-btn';
-    imageButton.style.display = 'none';
-    menuContainer.appendChild(imageButton);
-
-    document.body.appendChild(menuContainer);
   }
 
   function init() {
     loadSettings();
     applyPreloadDim();
 
-    if (document.body) {
-      createUI();
-    } else {
-      const observer = new MutationObserver(() => {
-        if (document.body) {
-          createUI();
-          observer.disconnect();
-        }
-      });
-      observer.observe(document.documentElement, { childList: true });
-    }
+    var waitForMenu = setInterval(function () {
+      if (!window.__userscriptFloatingMenu) return;
+      clearInterval(waitForMenu);
+      registerMenuButtons();
+    }, 100);
 
-    setTimeout(() => {
+    setTimeout(function () {
       removePreloadDim();
       checkAndApplyDarkMode();
       startPeriodicChecking();
@@ -460,12 +345,10 @@
   }
 
   function updateDarkModeButton() {
-    const darkModeButton = document.getElementById('dark-mode-toggle');
-    const darkModeState = getSettings().darkModeState;
-    if (darkModeButton) {
-      darkModeButton.textContent = getDarkModeIcon(darkModeState);
-      darkModeButton.title = getDarkModeTitle(darkModeState);
-    }
+    if (!darkModeButton) return;
+    var darkModeState = getSettings().darkModeState;
+    darkModeButton.textContent = getDarkModeIcon(darkModeState);
+    darkModeButton.title = getDarkModeTitle(darkModeState);
   }
 
   function checkAndApplyDarkMode() {

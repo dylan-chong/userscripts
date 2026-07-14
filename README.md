@@ -22,6 +22,8 @@ Use the [Userscripts](https://apps.apple.com/us/app/userscripts/id1463298887) ap
 |--------|-------------|---------|
 | **Chess Quadrant Lines** | Draw black lines splitting the chess.com board into quadrants | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/chess-quadrant-lines.user.js) |
 | **Facebook Messenger No Header** | Hides the header bar on messenger.com to remove notifications and marketplace | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/facebook-messenger-no-header.user.js) |
+| **Floating Menu** | Shared floating button menu for userscripts (required by dark mode and github-circleci) | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/floating-menu.user.js) |
+| **GitHub CircleCI** | Adds a button to open the CircleCI pipeline for the current GitHub repo/PR | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/github-circleci.user.js) |
 | **Facebook No Feed** | Hides the Facebook news feed and shows a "Don't waste time" message | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/facebook-no-feed.user.js) |
 | **OAuth Auto-Close** | Auto-close OAuth callback tab after "You can now close this tab." message | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/oauth-auto-close.user.js) |
 | **Poker Clock Remove UI** | Removes extra UI elements from clock.poker for a cleaner view | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/poker-clock-remove-ui.user.js) |
@@ -39,8 +41,10 @@ Use the [Userscripts](https://apps.apple.com/us/app/userscripts/id1463298887) ap
 ## Install all
 
 ```
+open https://raw.githubusercontent.com/dylan-chong/userscripts/main/floating-menu.user.js
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/chess-quadrant-lines.user.js
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/facebook-messenger-no-header.user.js
+open https://raw.githubusercontent.com/dylan-chong/userscripts/main/github-circleci.user.js
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/facebook-no-feed.user.js
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/oauth-auto-close.user.js
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/poker-clock-remove-ui.user.js
