@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name        facebook-messenger-no-header
 // @description Hide the header bar on messenger.com to remove notification badges and marketplace
-// @version     1.0
-// @match       *://*.messenger.com/*
+// @version     1.1
+// @match       *://*.facebook.com/messages/*
 // @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/facebook-messenger-no-header.user.js
 // @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/facebook-messenger-no-header.user.js
 // ==/UserScript==
