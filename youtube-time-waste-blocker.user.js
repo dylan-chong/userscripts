@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        youtube-time-waste-blocker
 // @description Block or gate YouTube videos based on deny/delay/permit categories
-// @version     2.2
+// @version     2.3
 // @match       *://*.youtube.com/*
 // @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js
 // @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js
@@ -22,7 +22,9 @@
         { name: 'Simple Breathing', steps: [['Breathe in', 4], ['Breathe out', 4]], cycles: 8 },
     ];
 
-    const completedUrls = new Set();
+    const COOLDOWN_MS = 30 * 60 * 1000;
+    const COOLDOWN_STORAGE_KEY = 'yt-time-waste-blocker-last-completed';
+    let lastCompletedAt = parseInt(localStorage.getItem(COOLDOWN_STORAGE_KEY)) || 0;
     let activeOverlay = null;
 
     function queryFirst(...selectors) {
@@ -183,10 +185,15 @@
         });
 
         updateDisplay();
-        setInterval(tick, 1000);
+        var intervalId = setInterval(function () {
+            pauseVideo();
+            tick();
+        }, 1000);
+        overlay._breathingIntervalId = intervalId;
     }
 
     function completeExercise(overlay) {
+        if (overlay._breathingIntervalId) clearInterval(overlay._breathingIntervalId);
         while (overlay.firstChild) overlay.removeChild(overlay.firstChild);
         overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;color:#fff;';
 
@@ -212,7 +219,8 @@
             remaining--;
             if (remaining <= 0) {
                 clearInterval(timer);
-                completedUrls.add(window.location.href);
+                lastCompletedAt = Date.now();
+                localStorage.setItem(COOLDOWN_STORAGE_KEY, String(lastCompletedAt));
                 overlay.remove();
                 activeOverlay = null;
                 playVideo();
@@ -244,7 +252,7 @@
 
         if (action === 'deny') {
             window.location.replace(SUBSCRIPTIONS_URL);
-        } else if (action === 'delay' && !completedUrls.has(window.location.href)) {
+        } else if (action === 'delay' && (Date.now() - lastCompletedAt > COOLDOWN_MS)) {
             pauseVideo();
             if (!activeOverlay) {
                 createBreathingOverlay();
