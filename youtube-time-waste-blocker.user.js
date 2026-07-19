@@ -13,7 +13,7 @@
 
     const CRITERIA = [
         { action: 'delay', type: 'channelOrTitle', keywords: ['Naroditsky', 'Mini Motorways'] },
-        { action: 'permit', type: 'channelOrTitle', keywords: ['Meditation', 'Singing Bowls', 'ASMR', 'Exercise', 'Breathing', 'Mindfulness', 'Workout'] },
+        { action: 'permit', type: 'channelOrTitle', keywords: ['Meditation', 'Singing Bowls', 'ASMR', 'Exercise', 'Breathing', 'Mindfulness', 'Workout', 'Visualisation', 'Visualization'] },
     ];
 
     const BREATHING_PATTERNS = [
