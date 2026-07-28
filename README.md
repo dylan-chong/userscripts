@@ -29,7 +29,8 @@ Use the [Userscripts](https://apps.apple.com/us/app/userscripts/id1463298887) ap
 | **Poker Clock Remove UI** | Removes extra UI elements from clock.poker for a cleaner view | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/poker-clock-remove-ui.user.js) |
 | **PokerChipForum Viewed Listings Tracker** | Grey out viewed listings on PokerChipForum marketplace with image previews | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/poker-chip-forum-read-listings.user.js) |
 | **Simple Dark Mode (Invert)** | Apply dark mode to any website using color inversion with toggles | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/dark-mode.user.js) |
-| **Dim Mode** | Dim overlay for OLED screens + edge-detection filter (uses floating menu) | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/dim-mode.user.js) |
+| **Dim Mode** | Dim overlay for OLED screens (uses floating menu) | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/dim-mode.user.js) |
+| **Night Video** | Fullscreen edge-detection video filter for OLED night viewing (uses floating menu) | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/night-video.user.js) |
 | **South Park TV Pop-up Blocker** | Prevents new tabs/windows from opening on watchsouthpark.tv | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/watch-south-park-popup-blocker.user.js) |
 | **YouTube Block Playlist Autoplay** | Block playlist auto-advance while allowing manual next | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-block-autoplay.user.js) |
 | **YouTube No Subscriptions** | Redirects YouTube subscriptions page to a specific video | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-no-subscriptions.user.js) |
@@ -52,6 +53,7 @@ open https://raw.githubusercontent.com/dylan-chong/userscripts/main/poker-clock-
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/poker-chip-forum-read-listings.user.js
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/dark-mode.user.js
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/dim-mode.user.js
+open https://raw.githubusercontent.com/dylan-chong/userscripts/main/night-video.user.js
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/watch-south-park-popup-blocker.user.js
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-block-autoplay.user.js
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-no-subscriptions.user.js
