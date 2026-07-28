@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        dim-mode
 // @description Dim overlay for OLED screens + edge-detection filter
-// @version     1.0.2
+// @version     1.1.0
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -24,7 +24,7 @@
   let overlay = null;
   let svgFilter = null;
   let button = null;
-  let filterObserver = null;
+  let canvasMode = null;
 
   function loadMode() {
     try {
@@ -66,6 +66,73 @@
     document.body.appendChild(svgFilter);
   }
 
+  function findVideo() {
+    var videos = document.querySelectorAll('video');
+    for (var i = 0; i < videos.length; i++) {
+      if (!videos[i].paused) return videos[i];
+    }
+    return videos[0] || null;
+  }
+
+  function enterCanvasMode() {
+    var video = findVideo();
+    if (!video) return;
+
+    var container = document.createElement('div');
+    container.id = 'dim-mode-canvas-container';
+    container.style.cssText =
+      'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999997;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;';
+
+    var canvas = document.createElement('canvas');
+    canvas.style.cssText = 'filter:url(#dim-mode-edge);max-width:100vw;max-height:calc(100vh - 60px);';
+    container.appendChild(canvas);
+
+    var controls = document.createElement('div');
+    controls.style.cssText = 'display:flex;gap:16px;padding:12px;';
+
+    function makeBtn(text, title, onClick) {
+      var btn = document.createElement('button');
+      btn.textContent = text;
+      btn.title = title;
+      btn.style.cssText =
+        'all:initial;display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;border:2px solid #666;background-color:#333;color:#fff;font-size:18px;cursor:pointer;';
+      btn.addEventListener('click', onClick);
+      return btn;
+    }
+
+    controls.appendChild(makeBtn('⏪', 'Back 10s', function () { video.currentTime -= 10; }));
+    controls.appendChild(makeBtn('⏯', 'Play/Pause', function () { video.paused ? video.play() : video.pause(); }));
+    controls.appendChild(makeBtn('⏩', 'Forward 10s', function () { video.currentTime += 10; }));
+    container.appendChild(controls);
+
+    document.body.appendChild(container);
+
+    var ctx = canvas.getContext('2d');
+    var timeoutId = null;
+
+    function draw() {
+      if (!canvasMode) return;
+      var vw = video.videoWidth || 300;
+      var vh = video.videoHeight || 150;
+      if (canvas.width !== vw) canvas.width = vw;
+      if (canvas.height !== vh) canvas.height = vh;
+      ctx.drawImage(video, 0, 0, vw, vh);
+      timeoutId = setTimeout(draw, 1000 / 24);
+    }
+    draw();
+
+    canvasMode = { container: container, canvas: canvas, ctx: ctx, video: video, timeoutId: timeoutId };
+  }
+
+  function exitCanvasMode() {
+    if (!canvasMode) return;
+    clearTimeout(canvasMode.timeoutId);
+    if (canvasMode.container.parentElement) {
+      canvasMode.container.parentElement.removeChild(canvasMode.container);
+    }
+    canvasMode = null;
+  }
+
   function applyMode() {
     ensureOverlay();
     ensureSvgFilter();
@@ -79,59 +146,15 @@
     }
 
     if (mode.filter) {
-      document.body.style.filter = 'url(#dim-mode-edge)';
-      var menu = document.querySelector('#floating-menu');
-      if (menu) menu.style.filter = 'none';
-      applyFilterToMedia();
-      startFilterObserver();
+      exitCanvasMode();
+      enterCanvasMode();
     } else {
-      document.body.style.filter = '';
-      removeFilterFromMedia();
-      stopFilterObserver();
+      exitCanvasMode();
     }
 
     if (button) {
       button.textContent = mode.label;
       button.title = mode.title;
-    }
-  }
-
-  function applyFilterToMedia() {
-    document.querySelectorAll('video, img').forEach(function (el) {
-      el.style.filter = 'url(#dim-mode-edge)';
-    });
-  }
-
-  function removeFilterFromMedia() {
-    document.querySelectorAll('video, img').forEach(function (el) {
-      el.style.filter = '';
-    });
-  }
-
-  function startFilterObserver() {
-    if (filterObserver) return;
-    filterObserver = new MutationObserver(function (mutations) {
-      mutations.forEach(function (m) {
-        m.addedNodes.forEach(function (node) {
-          if (node.nodeType !== 1) return;
-          if (node.tagName === 'VIDEO' || node.tagName === 'IMG') {
-            node.style.filter = 'url(#dim-mode-edge)';
-          }
-          if (node.querySelectorAll) {
-            node.querySelectorAll('video, img').forEach(function (el) {
-              el.style.filter = 'url(#dim-mode-edge)';
-            });
-          }
-        });
-      });
-    });
-    filterObserver.observe(document.body, { childList: true, subtree: true });
-  }
-
-  function stopFilterObserver() {
-    if (filterObserver) {
-      filterObserver.disconnect();
-      filterObserver = null;
     }
   }
 
