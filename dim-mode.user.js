@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        dim-mode
 // @description Dim overlay for OLED screens + edge-detection filter
-// @version     1.0.1
+// @version     1.0.2
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -24,6 +24,7 @@
   let overlay = null;
   let svgFilter = null;
   let button = null;
+  let filterObserver = null;
 
   function loadMode() {
     try {
@@ -81,13 +82,56 @@
       document.body.style.filter = 'url(#dim-mode-edge)';
       var menu = document.querySelector('#floating-menu');
       if (menu) menu.style.filter = 'none';
+      applyFilterToMedia();
+      startFilterObserver();
     } else {
       document.body.style.filter = '';
+      removeFilterFromMedia();
+      stopFilterObserver();
     }
 
     if (button) {
       button.textContent = mode.label;
       button.title = mode.title;
+    }
+  }
+
+  function applyFilterToMedia() {
+    document.querySelectorAll('video, img').forEach(function (el) {
+      el.style.filter = 'url(#dim-mode-edge)';
+    });
+  }
+
+  function removeFilterFromMedia() {
+    document.querySelectorAll('video, img').forEach(function (el) {
+      el.style.filter = '';
+    });
+  }
+
+  function startFilterObserver() {
+    if (filterObserver) return;
+    filterObserver = new MutationObserver(function (mutations) {
+      mutations.forEach(function (m) {
+        m.addedNodes.forEach(function (node) {
+          if (node.nodeType !== 1) return;
+          if (node.tagName === 'VIDEO' || node.tagName === 'IMG') {
+            node.style.filter = 'url(#dim-mode-edge)';
+          }
+          if (node.querySelectorAll) {
+            node.querySelectorAll('video, img').forEach(function (el) {
+              el.style.filter = 'url(#dim-mode-edge)';
+            });
+          }
+        });
+      });
+    });
+    filterObserver.observe(document.body, { childList: true, subtree: true });
+  }
+
+  function stopFilterObserver() {
+    if (filterObserver) {
+      filterObserver.disconnect();
+      filterObserver = null;
     }
   }
 
