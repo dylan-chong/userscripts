@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        dim-mode
 // @description Dim overlay for OLED screens + edge-detection filter
-// @version     1.0
+// @version     1.0.1
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -49,14 +49,19 @@
 
   function ensureSvgFilter() {
     if (svgFilter) return;
-    svgFilter = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    var ns = 'http://www.w3.org/2000/svg';
+    svgFilter = document.createElementNS(ns, 'svg');
     svgFilter.setAttribute('width', '0');
     svgFilter.setAttribute('height', '0');
     svgFilter.style.position = 'absolute';
-    svgFilter.innerHTML =
-      '<filter id="dim-mode-edge">' +
-      '<feConvolveMatrix order="3" kernelMatrix="0 -1 0 -1 4 -1 0 -1 0" preserveAlpha="true"/>' +
-      '</filter>';
+    var filter = document.createElementNS(ns, 'filter');
+    filter.setAttribute('id', 'dim-mode-edge');
+    var matrix = document.createElementNS(ns, 'feConvolveMatrix');
+    matrix.setAttribute('order', '3');
+    matrix.setAttribute('kernelMatrix', '0 -1 0 -1 4 -1 0 -1 0');
+    matrix.setAttribute('preserveAlpha', 'true');
+    filter.appendChild(matrix);
+    svgFilter.appendChild(filter);
     document.body.appendChild(svgFilter);
   }
 
@@ -73,9 +78,11 @@
     }
 
     if (mode.filter) {
-      document.documentElement.style.filter = 'url(#dim-mode-edge)';
+      document.body.style.filter = 'url(#dim-mode-edge)';
+      var menu = document.querySelector('#floating-menu');
+      if (menu) menu.style.filter = 'none';
     } else {
-      document.documentElement.style.filter = '';
+      document.body.style.filter = '';
     }
 
     if (button) {
