@@ -1,23 +1,23 @@
 // ==UserScript==
-// @name        super-dark-mode
-// @description Super dark overlay for OLED screens + edge-detection filter
+// @name        dim-mode
+// @description Dim overlay for OLED screens + edge-detection filter
 // @version     1.0
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
-// @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/super-dark-mode.user.js
-// @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/super-dark-mode.user.js
+// @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/dim-mode.user.js
+// @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/dim-mode.user.js
 // ==/UserScript==
 
 (function () {
   'use strict';
 
-  const STORAGE_KEY = 'super_dark_mode_v1';
+  const STORAGE_KEY = 'dim_mode_v1';
   const MODES = [
-    { label: '🌙', title: 'Super Dark: OFF', opacity: 0 },
-    { label: '🌑', title: 'Super Dark: 70%', opacity: 0.7 },
-    { label: '⚫', title: 'Super Dark: 40% brightness', opacity: 0.6 },
-    { label: '🔲', title: 'Super Dark: Edge Detection', opacity: 0, filter: true },
+    { label: '0', title: 'Dim: OFF', opacity: 0 },
+    { label: '1', title: 'Dim: 70%', opacity: 0.7 },
+    { label: '2', title: 'Dim: 40% brightness', opacity: 0.6 },
+    { label: '3', title: 'Dim: Edge Detection', opacity: 0, filter: true },
   ];
 
   let modeIndex = 0;
@@ -41,7 +41,7 @@
   function ensureOverlay() {
     if (overlay) return;
     overlay = document.createElement('div');
-    overlay.id = 'super-dark-overlay';
+    overlay.id = 'dim-mode-overlay';
     overlay.style.cssText =
       'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:999998;background:rgba(0,0,0,0);transition:background 0.3s ease;';
     document.body.appendChild(overlay);
@@ -54,7 +54,7 @@
     svgFilter.setAttribute('height', '0');
     svgFilter.style.position = 'absolute';
     svgFilter.innerHTML =
-      '<filter id="super-dark-edge">' +
+      '<filter id="dim-mode-edge">' +
       '<feConvolveMatrix order="3" kernelMatrix="0 -1 0 -1 4 -1 0 -1 0" preserveAlpha="true"/>' +
       '</filter>';
     document.body.appendChild(svgFilter);
@@ -73,7 +73,7 @@
     }
 
     if (mode.filter) {
-      document.documentElement.style.filter = 'url(#super-dark-edge)';
+      document.documentElement.style.filter = 'url(#dim-mode-edge)';
     } else {
       document.documentElement.style.filter = '';
     }
