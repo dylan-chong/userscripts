@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        dim-mode
 // @description Dim overlay for OLED screens + edge-detection filter
-// @version     1.1.0
+// @version     1.1.1
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -117,11 +117,11 @@
       if (canvas.width !== vw) canvas.width = vw;
       if (canvas.height !== vh) canvas.height = vh;
       ctx.drawImage(video, 0, 0, vw, vh);
-      timeoutId = setTimeout(draw, 1000 / 24);
+      canvasMode.timeoutId = setTimeout(draw, 1000 / 24);
     }
-    draw();
 
-    canvasMode = { container: container, canvas: canvas, ctx: ctx, video: video, timeoutId: timeoutId };
+    canvasMode = { container: container, canvas: canvas, ctx: ctx, video: video, timeoutId: null };
+    draw();
   }
 
   function exitCanvasMode() {
