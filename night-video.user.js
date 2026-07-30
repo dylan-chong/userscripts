@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        night-video
 // @description Fullscreen edge-detection video filter for OLED night viewing
-// @version     1.0.0
+// @version     1.0.1
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -124,7 +124,7 @@
       exitCanvasMode();
     }
     if (button) {
-      button.textContent = active ? 'N' : 'n';
+      button.textContent = active ? '■' : '□';
       button.title = active ? 'Night Video: ON' : 'Night Video: OFF';
     }
   }
@@ -141,7 +141,7 @@
       if (window.__userscriptFloatingMenu) {
         clearInterval(poll);
         button = window.__userscriptFloatingMenu.addButton(
-          active ? 'N' : 'n',
+          active ? '■' : '□',
           active ? 'Night Video: ON' : 'Night Video: OFF',
           toggle
         );

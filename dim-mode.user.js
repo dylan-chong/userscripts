@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        dim-mode
 // @description Dim overlay for OLED screens
-// @version     2.0.0
+// @version     2.0.1
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -14,9 +14,9 @@
 
   const STORAGE_KEY = 'dim_mode_v1';
   const MODES = [
-    { label: '0', title: 'Dim: OFF', opacity: 0 },
-    { label: '1', title: 'Dim: 70%', opacity: 0.7 },
-    { label: '2', title: 'Dim: 40% brightness', opacity: 0.6 },
+    { label: 'D', title: 'Dim: OFF', opacity: 0 },
+    { label: 'D', title: 'Dim: 70%', opacity: 0.7 },
+    { label: 'D', title: 'Dim: 40% brightness', opacity: 0.6 },
   ];
 
   let modeIndex = 0;
