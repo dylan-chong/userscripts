@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        floating-menu
 // @description Shared floating button menu for userscripts
-// @version     1.0
+// @version     2.0.0
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -22,6 +22,8 @@
   let settings = {};
   let menuOpen = false;
   let menuContainer = null;
+  let buttonEntries = [];
+  let groupContainer = null;
 
   function saveSettings() {
     try {
@@ -84,40 +86,107 @@
     return getSettings().buttonsOnRight ? 'calc(100vw - 52px)' : '16px';
   }
 
+  function renderButtons() {
+    if (!groupContainer) return;
+
+    while (groupContainer.firstChild) {
+      groupContainer.removeChild(groupContainer.firstChild);
+    }
+
+    var sorted = buttonEntries.slice().sort(function (a, b) {
+      if (a.sortKey !== b.sortKey) return a.sortKey - b.sortKey;
+      return a.insertOrder - b.insertOrder;
+    });
+
+    var groups = [];
+    var currentGroup = null;
+    sorted.forEach(function (entry) {
+      var key = entry.group || ('__solo_' + entry.insertOrder);
+      if (!currentGroup || currentGroup.key !== key) {
+        currentGroup = { key: key, entries: [], isSolo: !entry.group };
+        groups.push(currentGroup);
+      }
+      currentGroup.entries.push(entry);
+    });
+
+    groups.forEach(function (group, gi) {
+      var wrapper;
+      if (!group.isSolo && group.entries.length > 1) {
+        wrapper = document.createElement('div');
+        wrapper.style.cssText = 'display:flex;flex-direction:column-reverse;gap:6px;padding:5px;border-radius:12px;background:rgba(255,255,255,0.06);';
+      } else {
+        wrapper = document.createElement('div');
+        wrapper.style.cssText = 'display:flex;flex-direction:column-reverse;gap:6px;';
+      }
+
+      group.entries.forEach(function (entry) {
+        wrapper.appendChild(entry.button);
+      });
+
+      groupContainer.appendChild(wrapper);
+    });
+
+    updateButtonVisibility();
+  }
+
+  function updateButtonVisibility() {
+    if (!groupContainer) return;
+    var wrappers = groupContainer.children;
+    for (var i = 0; i < wrappers.length; i++) {
+      var wrapper = wrappers[i];
+      var buttons = wrapper.querySelectorAll('button');
+      for (var j = 0; j < buttons.length; j++) {
+        var btn = buttons[j];
+        if (menuOpen) {
+          btn.style.display = 'flex';
+          btn.style.opacity = '0';
+          btn.style.transform = 'translateY(10px) scale(0.8)';
+          (function (b, delay) {
+            requestAnimationFrame(function () {
+              b.style.transition = 'opacity 0.2s ease ' + delay + 's, transform 0.2s ease ' + delay + 's';
+              b.style.opacity = b._targetOpacity || '1';
+              b.style.transform = 'translateY(0) scale(1)';
+            });
+          })(btn, i * 0.05 + j * 0.03);
+        } else {
+          btn.style.transition = 'opacity 0.15s ease, transform 0.15s ease';
+          btn.style.opacity = '0';
+          btn.style.transform = 'translateY(10px) scale(0.8)';
+          (function (b) {
+            setTimeout(function () { b.style.display = 'none'; }, 150);
+          })(btn);
+        }
+      }
+      if (menuOpen) {
+        wrapper.style.display = 'flex';
+      } else {
+        (function (w) {
+          setTimeout(function () { w.style.display = 'none'; }, 150);
+        })(wrapper);
+      }
+    }
+  }
+
   function toggleMenu() {
     menuOpen = !menuOpen;
-    var childButtons = menuContainer.querySelectorAll('.fm-child-btn');
-    childButtons.forEach(function (btn, i) {
-      if (menuOpen) {
-        btn.style.display = 'block';
-        btn.style.opacity = '0';
-        btn.style.transform = 'translateY(10px) scale(0.8)';
-        requestAnimationFrame(function () {
-          btn.style.transition = 'opacity 0.2s ease ' + (i * 0.05) + 's, transform 0.2s ease ' + (i * 0.05) + 's';
-          btn.style.opacity = btn._targetOpacity || '1';
-          btn.style.transform = 'translateY(0) scale(1)';
-        });
-      } else {
-        btn.style.transition = 'opacity 0.15s ease, transform 0.15s ease';
-        btn.style.opacity = '0';
-        btn.style.transform = 'translateY(10px) scale(0.8)';
-        setTimeout(function () { btn.style.display = 'none'; }, 150);
-      }
-    });
+    updateButtonVisibility();
   }
 
   function addButton(text, title, onClick, options) {
     options = options || {};
     var button = createMenuButton(text, title, onClick);
-    button.className = 'fm-child-btn';
     button._targetOpacity = options.opacity || '1';
-    if (menuOpen) {
-      button.style.display = 'block';
-      button.style.opacity = button._targetOpacity;
-    } else {
-      button.style.display = 'none';
-    }
-    menuContainer.appendChild(button);
+    button.style.display = 'none';
+
+    var entry = {
+      button: button,
+      group: options.group || null,
+      sortKey: typeof options.sortKey === 'number' ? options.sortKey : 999,
+      insertOrder: buttonEntries.length,
+    };
+    buttonEntries.push(entry);
+
+    renderButtons();
     return button;
   }
 
@@ -130,19 +199,28 @@
     var mainButton = createMenuButton('⚙', 'Menu', toggleMenu);
     menuContainer.appendChild(mainButton);
 
-    var positionButton = createMenuButton(
-      getSettings().buttonsOnRight ? '←' : '→',
-      'Toggle button position',
-      function () {
-        settings.buttonsOnRight = !getSettings().buttonsOnRight;
-        positionButton.textContent = getSettings().buttonsOnRight ? '←' : '→';
-        menuContainer.style.left = getMenuLeft();
-        saveSettings();
-      }
-    );
-    positionButton.className = 'fm-child-btn';
-    positionButton.style.display = 'none';
-    menuContainer.appendChild(positionButton);
+    groupContainer = document.createElement('div');
+    groupContainer.style.cssText = 'display:flex;flex-direction:column-reverse;gap:12px;';
+    menuContainer.appendChild(groupContainer);
+
+    var positionEntry = {
+      button: createMenuButton(
+        getSettings().buttonsOnRight ? '←' : '→',
+        'Toggle button position',
+        function () {
+          settings.buttonsOnRight = !getSettings().buttonsOnRight;
+          positionEntry.button.textContent = getSettings().buttonsOnRight ? '←' : '→';
+          menuContainer.style.left = getMenuLeft();
+          saveSettings();
+        }
+      ),
+      group: '__position',
+      sortKey: 9999,
+      insertOrder: -1,
+    };
+    positionEntry.button.style.display = 'none';
+    buttonEntries.push(positionEntry);
+    renderButtons();
 
     document.body.appendChild(menuContainer);
 

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        dim-mode
 // @description Dim overlay for OLED screens
-// @version     2.0.1
+// @version     2.1.0
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -75,7 +75,8 @@
         button = window.__userscriptFloatingMenu.addButton(
           mode.label,
           mode.title,
-          cycleMode
+          cycleMode,
+          { group: 'display', sortKey: 12 }
         );
         applyMode();
       }

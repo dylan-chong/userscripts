@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        github-circleci
 // @description Add a button to open CircleCI pipeline for the current GitHub repo/PR
-// @version     1.0
+// @version     1.1
 // @match       *://github.com/*/*
 // @grant       none
 // @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/github-circleci.user.js
@@ -31,6 +31,6 @@
 
         window.__userscriptFloatingMenu.addButton('CI', 'Open CircleCI pipeline', function () {
             window.open(url, '_blank');
-        });
+        }, { group: 'dev', sortKey: 30 });
     }, 100);
 })();

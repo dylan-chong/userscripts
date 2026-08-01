@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Simple Dark Mode (Invert)
 // @namespace    http://tampermonkey.net/
-// @version      6.0
+// @version      6.1
 // @description  Apply dark mode to websites using color inversion with toggles
 // @author       You
 // @match        *://*/*
@@ -310,7 +310,8 @@
         darkModeButton.title = getDarkModeTitle(getSettings().darkModeState);
         checkAndApplyDarkMode();
         saveSettings();
-      }
+      },
+      { group: 'display', sortKey: 10 }
     );
 
     var imageButton = menu.addButton(
@@ -323,7 +324,7 @@
         imageButton.style.opacity = imageButton._targetOpacity;
         saveSettings();
       },
-      { opacity: getSettings().imagesInverted ? '1' : '0.5' }
+      { opacity: getSettings().imagesInverted ? '1' : '0.5', group: 'display', sortKey: 11 }
     );
   }
 
