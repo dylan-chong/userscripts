@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        night-video
 // @description Fullscreen edge-detection video filter for OLED night viewing
-// @version     1.1.0
+// @version     1.1.1
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -144,7 +144,7 @@
           active ? '■' : '□',
           active ? 'Night Video: ON' : 'Night Video: OFF',
           toggle,
-          { group: 'display', sortKey: 13 }
+          { group: 'video', sortKey: 13 }
         );
         apply();
       }

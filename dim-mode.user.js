@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        dim-mode
 // @description Dim overlay for OLED screens
-// @version     2.1.0
+// @version     2.1.1
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
