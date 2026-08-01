@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        night-video
-// @description Fullscreen edge-detection video filter for OLED night viewing
-// @version     1.1.1
+// @description Fullscreen video filters (edge detect, sharpen, grayscale, emboss) for OLED night viewing
+// @version     1.2.1
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -14,20 +14,30 @@
 
   const STORAGE_KEY = 'night_video_v1';
 
-  let active = false;
+  const FILTERS = [
+    { id: null, title: 'Night Video: OFF' },
+    { id: 'night-video-1', title: 'Night Video: Edge Detect' },
+    { id: 'night-video-2', title: 'Night Video: Sharpen + Dim' },
+    { id: 'night-video-3', title: 'Night Video: High Contrast Gray' },
+    { id: 'night-video-4', title: 'Night Video: Edges + Dim Original' },
+    { id: 'night-video-5', title: 'Night Video: Emboss' },
+  ];
+
+  let filterIndex = 0;
   let svgFilter = null;
   let canvasMode = null;
   let button = null;
 
   function loadState() {
     try {
-      active = localStorage.getItem(STORAGE_KEY) === '1';
+      var stored = parseInt(localStorage.getItem(STORAGE_KEY), 10);
+      filterIndex = isNaN(stored) || stored < 0 || stored >= FILTERS.length ? 0 : stored;
     } catch (e) {}
   }
 
   function saveState() {
     try {
-      localStorage.setItem(STORAGE_KEY, active ? '1' : '0');
+      localStorage.setItem(STORAGE_KEY, String(filterIndex));
     } catch (e) {}
   }
 
@@ -38,14 +48,86 @@
     svgFilter.setAttribute('width', '0');
     svgFilter.setAttribute('height', '0');
     svgFilter.style.position = 'absolute';
-    var filter = document.createElementNS(ns, 'filter');
-    filter.setAttribute('id', 'night-video-edge');
-    var matrix = document.createElementNS(ns, 'feConvolveMatrix');
-    matrix.setAttribute('order', '3');
-    matrix.setAttribute('kernelMatrix', '0 -1 0 -1 4 -1 0 -1 0');
-    matrix.setAttribute('preserveAlpha', 'true');
-    filter.appendChild(matrix);
-    svgFilter.appendChild(filter);
+
+    function makeConvolve(kernelMatrix, resultName, inName) {
+      var m = document.createElementNS(ns, 'feConvolveMatrix');
+      m.setAttribute('order', '3');
+      m.setAttribute('kernelMatrix', kernelMatrix);
+      m.setAttribute('preserveAlpha', 'true');
+      if (inName) m.setAttribute('in', inName);
+      if (resultName) m.setAttribute('result', resultName);
+      return m;
+    }
+
+    function makeLinearComponentTransfer(slope, intercept, inName, resultName) {
+      var ct = document.createElementNS(ns, 'feComponentTransfer');
+      if (inName) ct.setAttribute('in', inName);
+      if (resultName) ct.setAttribute('result', resultName);
+      ['feFuncR', 'feFuncG', 'feFuncB'].forEach(function (tag) {
+        var fn = document.createElementNS(ns, tag);
+        fn.setAttribute('type', 'linear');
+        fn.setAttribute('slope', String(slope));
+        fn.setAttribute('intercept', String(intercept));
+        ct.appendChild(fn);
+      });
+      return ct;
+    }
+
+    function makeDilate(radius, inName, resultName) {
+      var m = document.createElementNS(ns, 'feMorphology');
+      m.setAttribute('operator', 'dilate');
+      m.setAttribute('radius', String(radius));
+      if (inName) m.setAttribute('in', inName);
+      if (resultName) m.setAttribute('result', resultName);
+      return m;
+    }
+
+    // Filter 1: Edge detect
+    var f1 = document.createElementNS(ns, 'filter');
+    f1.setAttribute('id', 'night-video-1');
+    f1.appendChild(makeConvolve('0 -1 0 -1 4 -1 0 -1 0', 'edges'));
+    f1.appendChild(makeDilate(2, 'edges'));
+    svgFilter.appendChild(f1);
+
+    // Filter 2: Sharpen + dim
+    var f2 = document.createElementNS(ns, 'filter');
+    f2.setAttribute('id', 'night-video-2');
+    f2.appendChild(makeConvolve('0 -1 0 -1 6 -1 0 -1 0', 'sharpened'));
+    f2.appendChild(makeDilate(1, 'sharpened'));
+    f2.appendChild(makeLinearComponentTransfer(0.3, 0));
+    svgFilter.appendChild(f2);
+
+    // Filter 3: High contrast grayscale
+    var f3 = document.createElementNS(ns, 'filter');
+    f3.setAttribute('id', 'night-video-3');
+    var saturate = document.createElementNS(ns, 'feColorMatrix');
+    saturate.setAttribute('type', 'saturate');
+    saturate.setAttribute('values', '0');
+    f3.appendChild(saturate);
+    f3.appendChild(makeLinearComponentTransfer(2, -0.4));
+    f3.appendChild(makeLinearComponentTransfer(0.4, 0));
+    svgFilter.appendChild(f3);
+
+    // Filter 4: Edges blended with dim original
+    var f4 = document.createElementNS(ns, 'filter');
+    f4.setAttribute('id', 'night-video-4');
+    f4.appendChild(makeLinearComponentTransfer(0.25, 0, 'SourceGraphic', 'dim'));
+    f4.appendChild(makeConvolve('0 -1 0 -1 4 -1 0 -1 0', 'edgesRaw', 'SourceGraphic'));
+    f4.appendChild(makeDilate(2, 'edgesRaw', 'edges'));
+    var blend = document.createElementNS(ns, 'feBlend');
+    blend.setAttribute('mode', 'screen');
+    blend.setAttribute('in', 'dim');
+    blend.setAttribute('in2', 'edges');
+    f4.appendChild(blend);
+    svgFilter.appendChild(f4);
+
+    // Filter 5: Emboss
+    var f5 = document.createElementNS(ns, 'filter');
+    f5.setAttribute('id', 'night-video-5');
+    f5.appendChild(makeConvolve('-2 -1 0 -1 1 1 0 1 2', 'embossed'));
+    f5.appendChild(makeDilate(1, 'embossed'));
+    svgFilter.appendChild(f5);
+
     document.body.appendChild(svgFilter);
   }
 
@@ -68,7 +150,8 @@
       'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999997;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;';
 
     var canvas = document.createElement('canvas');
-    canvas.style.cssText = 'filter:url(#night-video-edge);max-width:100vw;max-height:calc(100vh - 60px);';
+    canvas.style.cssText =
+      'filter:url(#' + FILTERS[filterIndex].id + ');max-width:100vw;max-height:calc(100vh - 60px);';
     container.appendChild(canvas);
 
     var controls = document.createElement('div');
@@ -117,20 +200,20 @@
   }
 
   function apply() {
-    if (active) {
+    if (filterIndex > 0) {
       exitCanvasMode();
       enterCanvasMode();
     } else {
       exitCanvasMode();
     }
     if (button) {
-      button.textContent = active ? '■' : '□';
-      button.title = active ? 'Night Video: ON' : 'Night Video: OFF';
+      button.textContent = '📺';
+      button.title = FILTERS[filterIndex].title;
     }
   }
 
-  function toggle() {
-    active = !active;
+  function cycle() {
+    filterIndex = (filterIndex + 1) % FILTERS.length;
     saveState();
     apply();
   }
@@ -141,9 +224,9 @@
       if (window.__userscriptFloatingMenu) {
         clearInterval(poll);
         button = window.__userscriptFloatingMenu.addButton(
-          active ? '■' : '□',
-          active ? 'Night Video: ON' : 'Night Video: OFF',
-          toggle,
+          '📺',
+          FILTERS[filterIndex].title,
+          cycle,
           { group: 'video', sortKey: 13 }
         );
         apply();
