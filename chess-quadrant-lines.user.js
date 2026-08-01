@@ -1,8 +1,10 @@
 // ==UserScript==
 // @name        chess-quadrant-lines
 // @description Draw quadrant lines and blur mode for chess.com board
-// @version     2.0.0
+// @version     2.0.1
 // @match       *://*.chess.com/*
+// @run-at      document-idle
+// @grant       none
 // @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/chess-quadrant-lines.user.js
 // @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/chess-quadrant-lines.user.js
 // ==/UserScript==
@@ -135,26 +137,31 @@
   }
 
   function registerButtons() {
-    var poll = setInterval(function () {
-      if (window.__userscriptFloatingMenu) {
-        clearInterval(poll);
-        var menu = window.__userscriptFloatingMenu;
+    function doRegister() {
+      var menu = window.__userscriptFloatingMenu;
+      if (!menu) return false;
 
-        linesButton = menu.addButton(
-          '+',
-          linesEnabled ? 'Quadrant Lines: ON' : 'Quadrant Lines: OFF',
-          toggleLines,
-          { group: 'chess', sortKey: 20, opacity: linesEnabled ? '1' : '0.5' }
-        );
+      linesButton = menu.addButton(
+        '+',
+        linesEnabled ? 'Quadrant Lines: ON' : 'Quadrant Lines: OFF',
+        toggleLines,
+        { group: 'chess', sortKey: 20, opacity: linesEnabled ? '1' : '0.5' }
+      );
 
-        blurButton = menu.addButton(
-          'B',
-          BLUR_MODES[blurIndex].title,
-          cycleBlur,
-          { group: 'chess', sortKey: 21 }
-        );
-      }
-    }, 100);
+      blurButton = menu.addButton(
+        'B',
+        BLUR_MODES[blurIndex].title,
+        cycleBlur,
+        { group: 'chess', sortKey: 21 }
+      );
+      return true;
+    }
+
+    if (!doRegister()) {
+      var poll = setInterval(function () {
+        if (doRegister()) clearInterval(poll);
+      }, 200);
+    }
   }
 
   function init() {
