@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        floating-menu
 // @description Shared floating button menu for userscripts
-// @version     2.1.0
+// @version     2.1.1
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -66,7 +66,7 @@
     text-decoration: none;
     cursor: pointer;
     position: relative;
-    z-index: 1;
+    z-index: 2;
     box-sizing: border-box;
     box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     transition: all 0.2s ease;
@@ -82,7 +82,8 @@
     border-radius: 6px;
     background-color: #333;
     position: relative;
-    z-index: 0;
+    z-index: -1;
+    pointer-events: none;
   `;
 
   function createMenuButton(text, title, onClick) {
@@ -127,7 +128,7 @@
       var wrapper = document.createElement('div');
 
       if (!group.isSolo && group.entries.length > 1) {
-        wrapper.style.cssText = 'display:none;flex-direction:column-reverse;align-items:center;';
+        wrapper.style.cssText = 'display:none;flex-direction:column-reverse;align-items:center;isolation:isolate;';
         group.entries.forEach(function (entry, i) {
           wrapper.appendChild(entry.button);
           if (i < group.entries.length - 1) {
