@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        floating-menu
 // @description Shared floating button menu for userscripts
-// @version     2.1.1
+// @version     2.2.0
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -65,25 +65,10 @@
     text-indent: 0;
     text-decoration: none;
     cursor: pointer;
-    position: relative;
-    z-index: 2;
+    z-index: 999999;
     box-sizing: border-box;
     box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     transition: all 0.2s ease;
-  `;
-
-  const CONNECTOR_STYLE = `
-    all: initial;
-    display: block;
-    box-sizing: border-box;
-    width: 12px;
-    height: 24px;
-    margin: -8px 0;
-    border-radius: 6px;
-    background-color: #333;
-    position: relative;
-    z-index: -1;
-    pointer-events: none;
   `;
 
   function createMenuButton(text, title, onClick) {
@@ -128,14 +113,9 @@
       var wrapper = document.createElement('div');
 
       if (!group.isSolo && group.entries.length > 1) {
-        wrapper.style.cssText = 'display:none;flex-direction:column-reverse;align-items:center;isolation:isolate;';
-        group.entries.forEach(function (entry, i) {
+        wrapper.style.cssText = 'display:none;flex-direction:column-reverse;align-items:center;gap:4px;padding:2px;border-radius:20px;background:#333;';
+        group.entries.forEach(function (entry) {
           wrapper.appendChild(entry.button);
-          if (i < group.entries.length - 1) {
-            var connector = document.createElement('div');
-            connector.style.cssText = CONNECTOR_STYLE;
-            wrapper.appendChild(connector);
-          }
         });
       } else {
         wrapper.style.cssText = 'display:none;flex-direction:column-reverse;align-items:center;gap:6px;';
