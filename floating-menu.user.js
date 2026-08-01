@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        floating-menu
 // @description Shared floating button menu for userscripts
-// @version     2.0.2
+// @version     2.0.3
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -194,7 +194,7 @@
     menuContainer = document.createElement('div');
     menuContainer.id = 'floating-menu';
     menuContainer.style.cssText =
-      'position:fixed;bottom:16px;left:' + getMenuLeft() + ';display:flex;flex-direction:column-reverse;gap:8px;z-index:999999;transition:left 0.3s ease;';
+      'position:fixed;bottom:16px;left:' + getMenuLeft() + ';display:flex;flex-direction:column-reverse;align-items:center;gap:8px;z-index:999999;transition:left 0.3s ease;';
 
     var mainButton = createMenuButton('⚙', 'Menu', toggleMenu);
     menuContainer.appendChild(mainButton);
