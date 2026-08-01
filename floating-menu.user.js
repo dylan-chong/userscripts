@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        floating-menu
 // @description Shared floating button menu for userscripts
-// @version     2.0.4
+// @version     2.1.0
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -65,10 +65,24 @@
     text-indent: 0;
     text-decoration: none;
     cursor: pointer;
-    z-index: 999999;
+    position: relative;
+    z-index: 1;
     box-sizing: border-box;
     box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     transition: all 0.2s ease;
+  `;
+
+  const CONNECTOR_STYLE = `
+    all: initial;
+    display: block;
+    box-sizing: border-box;
+    width: 12px;
+    height: 24px;
+    margin: -8px 0;
+    border-radius: 6px;
+    background-color: #333;
+    position: relative;
+    z-index: 0;
   `;
 
   function createMenuButton(text, title, onClick) {
@@ -110,18 +124,24 @@
     });
 
     groups.forEach(function (group, gi) {
-      var wrapper;
-      if (!group.isSolo && group.entries.length > 1) {
-        wrapper = document.createElement('div');
-        wrapper.style.cssText = 'display:none;flex-direction:column-reverse;align-items:center;gap:4px;padding:3px;border-radius:20px;background:rgba(0,0,0,0.5);';
-      } else {
-        wrapper = document.createElement('div');
-        wrapper.style.cssText = 'display:none;flex-direction:column-reverse;align-items:center;gap:6px;';
-      }
+      var wrapper = document.createElement('div');
 
-      group.entries.forEach(function (entry) {
-        wrapper.appendChild(entry.button);
-      });
+      if (!group.isSolo && group.entries.length > 1) {
+        wrapper.style.cssText = 'display:none;flex-direction:column-reverse;align-items:center;';
+        group.entries.forEach(function (entry, i) {
+          wrapper.appendChild(entry.button);
+          if (i < group.entries.length - 1) {
+            var connector = document.createElement('div');
+            connector.style.cssText = CONNECTOR_STYLE;
+            wrapper.appendChild(connector);
+          }
+        });
+      } else {
+        wrapper.style.cssText = 'display:none;flex-direction:column-reverse;align-items:center;gap:6px;';
+        group.entries.forEach(function (entry) {
+          wrapper.appendChild(entry.button);
+        });
+      }
 
       groupContainer.appendChild(wrapper);
     });
