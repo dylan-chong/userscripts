@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        chess-quadrant-lines
 // @description Draw quadrant lines and blur mode for chess.com board
-// @version     2.1.0
+// @version     2.1.1
 // @match       *://*.chess.com/*
 // @run-at      document-idle
 // @grant       none
@@ -22,9 +22,11 @@
 
   const BLUR_MODES = [
     { label: 'B', title: 'Blur: OFF', value: 0 },
-    { label: 'B', title: 'Blur: Light (2px)', value: 2 },
-    { label: 'B', title: 'Blur: Medium (5px)', value: 5 },
-    { label: 'B', title: 'Blur: Heavy (10px)', value: 10 },
+    { label: 'B', title: 'Blur: 2px', value: 2 },
+    { label: 'B', title: 'Blur: 4px', value: 4 },
+    { label: 'B', title: 'Blur: 6px', value: 6 },
+    { label: 'B', title: 'Blur: 8px', value: 8 },
+    { label: 'B', title: 'Blur: 10px', value: 10 },
   ];
 
   let linesIndex = 2;
