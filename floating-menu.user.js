@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        floating-menu
 // @description Shared floating button menu for userscripts
-// @version     2.0.1
+// @version     2.0.2
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -113,7 +113,7 @@
       var wrapper;
       if (!group.isSolo && group.entries.length > 1) {
         wrapper = document.createElement('div');
-        wrapper.style.cssText = 'display:none;flex-direction:column-reverse;align-items:center;gap:6px;padding:5px;border-radius:12px;background:rgba(255,255,255,0.06);';
+        wrapper.style.cssText = 'display:none;flex-direction:column-reverse;align-items:center;gap:4px;padding:3px;border-radius:20px;background:rgba(255,255,255,0.06);';
       } else {
         wrapper = document.createElement('div');
         wrapper.style.cssText = 'display:none;flex-direction:column-reverse;align-items:center;gap:6px;';
