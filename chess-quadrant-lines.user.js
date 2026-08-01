@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        chess-quadrant-lines
 // @description Draw quadrant lines and blur mode for chess.com board
-// @version     2.0.1
+// @version     2.1.0
 // @match       *://*.chess.com/*
 // @run-at      document-idle
 // @grant       none
@@ -12,7 +12,13 @@
   const STORAGE_KEY = 'chess_tools_v1';
   const LINE_ID_H = 'quadrant-line-horizontal';
   const LINE_ID_V = 'quadrant-line-vertical';
-  const THICKNESS = '6px';
+
+  const LINE_MODES = [
+    { title: 'Lines: OFF', thickness: 0 },
+    { title: 'Lines: Thin (2px)', thickness: 2 },
+    { title: 'Lines: Medium (6px)', thickness: 6 },
+    { title: 'Lines: Thick (10px)', thickness: 10 },
+  ];
 
   const BLUR_MODES = [
     { label: 'B', title: 'Blur: OFF', value: 0 },
@@ -21,7 +27,7 @@
     { label: 'B', title: 'Blur: Heavy (10px)', value: 10 },
   ];
 
-  let linesEnabled = true;
+  let linesIndex = 2;
   let blurIndex = 0;
   let linesButton = null;
   let blurButton = null;
@@ -31,7 +37,7 @@
       var raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         var state = JSON.parse(raw);
-        if (typeof state.linesEnabled === 'boolean') linesEnabled = state.linesEnabled;
+        if (typeof state.linesIndex === 'number') linesIndex = state.linesIndex;
         if (typeof state.blurIndex === 'number') blurIndex = state.blurIndex;
       }
     } catch (e) {}
@@ -39,7 +45,7 @@
 
   function saveState() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ linesEnabled: linesEnabled, blurIndex: blurIndex }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ linesIndex: linesIndex, blurIndex: blurIndex }));
     } catch (e) {}
   }
 
@@ -52,11 +58,6 @@
       pointerEvents: 'none',
       zIndex: '9999',
     });
-    if (isHorizontal) {
-      line.style.height = THICKNESS;
-    } else {
-      line.style.width = THICKNESS;
-    }
     return line;
   }
 
@@ -90,8 +91,9 @@
 
     let hLine = board.querySelector('#' + LINE_ID_H);
     let vLine = board.querySelector('#' + LINE_ID_V);
+    var mode = LINE_MODES[linesIndex];
 
-    if (linesEnabled) {
+    if (mode.thickness > 0) {
       if (!hLine) {
         hLine = createLine(LINE_ID_H, true);
         board.appendChild(hLine);
@@ -100,6 +102,8 @@
         vLine = createLine(LINE_ID_V, false);
         board.appendChild(vLine);
       }
+      hLine.style.height = mode.thickness + 'px';
+      vLine.style.width = mode.thickness + 'px';
       hLine.style.display = '';
       vLine.style.display = '';
       positionLines(board, hLine, vLine);
@@ -116,14 +120,12 @@
     board.style.filter = mode.value > 0 ? 'blur(' + mode.value + 'px)' : '';
   }
 
-  function toggleLines() {
-    linesEnabled = !linesEnabled;
+  function cycleLines() {
+    linesIndex = (linesIndex + 1) % LINE_MODES.length;
     saveState();
     applyLines();
     if (linesButton) {
-      linesButton.title = linesEnabled ? 'Quadrant Lines: ON' : 'Quadrant Lines: OFF';
-      linesButton._targetOpacity = linesEnabled ? '1' : '0.5';
-      linesButton.style.opacity = linesButton._targetOpacity;
+      linesButton.title = LINE_MODES[linesIndex].title;
     }
   }
 
@@ -143,9 +145,9 @@
 
       linesButton = menu.addButton(
         '+',
-        linesEnabled ? 'Quadrant Lines: ON' : 'Quadrant Lines: OFF',
-        toggleLines,
-        { group: 'chess', sortKey: 20, opacity: linesEnabled ? '1' : '0.5' }
+        LINE_MODES[linesIndex].title,
+        cycleLines,
+        { group: 'chess', sortKey: 20 }
       );
 
       blurButton = menu.addButton(
