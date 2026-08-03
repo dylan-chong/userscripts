@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        youtube-time-waste-blocker
 // @description Block or gate YouTube videos based on deny/delay/permit categories
-// @version     2.3
+// @version     2.4
 // @match       *://*.youtube.com/*
 // @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js
 // @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js
@@ -20,6 +20,7 @@
         { name: 'Box Breathing', steps: [['Breathe in', 4], ['Hold', 4], ['Breathe out', 4], ['Hold', 4]], cycles: 4 },
         { name: '4-7-8 Breathing', steps: [['Breathe in', 4], ['Hold', 7], ['Breathe out', 8]], cycles: 3 },
         { name: 'Simple Breathing', steps: [['Breathe in', 4], ['Breathe out', 4]], cycles: 8 },
+        { name: '5 Minute Breathing', steps: [['Breathe in', 5], ['Hold', 5], ['Breathe out', 5], ['Hold', 5]], cycles: 15 },
     ];
 
     const COOLDOWN_MS = 30 * 60 * 1000;
