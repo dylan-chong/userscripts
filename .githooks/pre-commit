@@ -1,5 +1,11 @@
 #!/bin/bash
 
+set -ex
+
+cd "$(git rev-parse --show-toplevel)"
+node build.js
+git add build/all.user.js
+
 failed=0
 
 for file in $(git diff --cached --name-only --diff-filter=M | grep '\.user\.js$'); do

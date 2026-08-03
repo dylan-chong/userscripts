@@ -16,6 +16,14 @@ Use the [Userscripts](https://apps.apple.com/us/app/userscripts/id1463298887) ap
 2. Clone this repo inside an iCloud Drive directory
 3. Set the Userscripts directory on both platforms to the iCloud folder
 
+## Install everything in one script
+
+Instead of installing each script below individually, you can install a single combined script that bundles all of them — each sub-script still only runs on the sites it originally targeted, but there's only one script to install and keep up to date.
+
+[Install combined bundle](https://raw.githubusercontent.com/dylan-chong/userscripts/main/build/all.user.js)
+
+The bundle is regenerated from the individual scripts via `build.js` on every commit (see `.githooks/pre-commit`).
+
 ## Scripts
 
 | Script | Description | Install |
