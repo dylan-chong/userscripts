@@ -40,6 +40,7 @@ The bundle is regenerated from the individual scripts via `builder/build.js` on 
 | **Dim Mode** | Dim overlay for OLED screens (uses floating menu) | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/dim-mode.user.js) |
 | **Night Video** | Fullscreen edge-detection video filter for OLED night viewing (uses floating menu) | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/night-video.user.js) |
 | **South Park TV Pop-up Blocker** | Prevents new tabs/windows from opening on watchsouthpark.tv | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/watch-south-park-popup-blocker.user.js) |
+| **MyVidPlay Pop-up Blocker** | Aggressive pop-up blocking for the myvidplay.com video player (used in a South Park TV iframe) | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/watch-south-park-iframe-popup-blocker.user.js) |
 | **YouTube Block Playlist Autoplay** | Block playlist auto-advance while allowing manual next | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-block-autoplay.user.js) |
 | **YouTube No Subscriptions** | Redirects YouTube subscriptions page to a specific video | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-no-subscriptions.user.js) |
 | **YouTube Redirect** | Redirects YouTube home to subscriptions feed and converts Shorts to regular videos | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-redirect.user.js) |
@@ -63,6 +64,7 @@ open https://raw.githubusercontent.com/dylan-chong/userscripts/main/dark-mode.us
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/dim-mode.user.js
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/night-video.user.js
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/watch-south-park-popup-blocker.user.js
+open https://raw.githubusercontent.com/dylan-chong/userscripts/main/watch-south-park-iframe-popup-blocker.user.js
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-block-autoplay.user.js
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-no-subscriptions.user.js
 open https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-redirect.user.js
