@@ -22,7 +22,7 @@ Instead of installing each script below individually, you can install a single c
 
 [Install combined bundle](https://raw.githubusercontent.com/dylan-chong/userscripts/main/build/all.user.js)
 
-The bundle is regenerated from the individual scripts via `build.js` on every commit (see `.githooks/pre-commit`).
+The bundle is regenerated from the individual scripts via `builder/build.js` on every commit (see `.githooks/pre-commit`).
 
 ## Scripts
 

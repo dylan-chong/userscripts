@@ -9,7 +9,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const ROOT = __dirname;
+const ROOT = path.join(__dirname, '..');
 const OUTPUT_DIR = path.join(ROOT, 'build');
 const OUTPUT_PATH = path.join(OUTPUT_DIR, 'all.user.js');
 const OUTPUT_BASENAME = 'all.user.js';
