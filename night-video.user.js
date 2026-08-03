@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        night-video
 // @description Fullscreen video filters (edge detect, sharpen, grayscale, emboss) for OLED night viewing
-// @version     1.2.1
+// @version     1.2.2
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -183,7 +183,7 @@
       if (canvas.width !== vw) canvas.width = vw;
       if (canvas.height !== vh) canvas.height = vh;
       ctx.drawImage(video, 0, 0, vw, vh);
-      canvasMode.timeoutId = setTimeout(draw, 1000 / 24);
+      canvasMode.timeoutId = setTimeout(draw, 1000 / 16);
     }
 
     canvasMode = { container: container, canvas: canvas, ctx: ctx, video: video, timeoutId: null };
