@@ -16,11 +16,11 @@
         { action: 'permit', type: 'channelOrTitle', keywords: ['Meditation', 'Singing Bowls', 'ASMR', 'Exercise', 'Breathing', 'Mindfulness', 'Workout', 'Visualisation', 'Visualization', "Mind's Eye"] },
     ];
 
+    const MEDITATION_DURATION = 5 * 60 * 1000;
     const BREATHING_PATTERNS = [
-        { name: 'Box Breathing', steps: [['Breathe in', 4], ['Hold', 4], ['Breathe out', 4], ['Hold', 4]], cycles: 4 },
-        { name: '4-7-8 Breathing', steps: [['Breathe in', 4], ['Hold', 7], ['Breathe out', 8]], cycles: 3 },
-        { name: 'Simple Breathing', steps: [['Breathe in', 4], ['Breathe out', 4]], cycles: 8 },
-        { name: '5 Minute Breathing', steps: [['Breathe in', 5], ['Hold', 5], ['Breathe out', 5], ['Hold', 5]], cycles: 15 },
+        { name: 'Box Breathing', steps: [['Breathe in', 4], ['Hold', 4], ['Breathe out', 4], ['Hold', 4]] },
+        { name: '4-7-8 Breathing', steps: [['Breathe in', 4], ['Hold', 7], ['Breathe out', 8]] },
+        { name: 'Simple Breathing', steps: [['Breathe in', 4], ['Breathe out', 4]] },
     ];
 
     const COOLDOWN_MS = 30 * 60 * 1000;
@@ -133,8 +133,17 @@
         runBreathingExercise(pattern, circle, instruction, progress, overlay);
     }
 
+    function calculateCycles(pattern) {
+      const oneCycleDuration = pattern.steps
+        .map(([_name, duration]) => duration)
+        .reduce((prev, current) => prev + current, 0);
+      const cycles = MEDITATION_DURATION / oneCycleDuration;
+      return Math.ceil(cycles);
+    }
+
     function runBreathingExercise(pattern, circle, instruction, progress, overlay) {
         var currentCycle = 0;
+        var cycles = calculateCycles(pattern);
         var currentStep = 0;
         var secondsLeft = pattern.steps[0][1];
         var paused = false;
@@ -143,7 +152,7 @@
             var stepName = pattern.steps[currentStep][0];
             var stepDuration = pattern.steps[currentStep][1];
             instruction.textContent = stepName + '...';
-            progress.textContent = 'Cycle ' + (currentCycle + 1) + ' of ' + pattern.cycles + '  •  ' + secondsLeft + 's';
+            progress.textContent = 'Cycle ' + (currentCycle + 1) + ' of ' + cycles + '  •  ' + secondsLeft + 's';
 
             var scale = 1;
             var elapsed = stepDuration - secondsLeft;
@@ -167,7 +176,7 @@
                 if (currentStep >= pattern.steps.length) {
                     currentStep = 0;
                     currentCycle++;
-                    if (currentCycle >= pattern.cycles) {
+                    if (currentCycle >= cycles) {
                         completeExercise(overlay);
                         return;
                     }
