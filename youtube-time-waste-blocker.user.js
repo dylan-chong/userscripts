@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        youtube-time-waste-blocker
 // @description Block or gate YouTube videos based on deny/delay/permit categories
-// @version     2.4
+// @version     2.5
 // @match       *://*.youtube.com/*
 // @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js
 // @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js
@@ -16,7 +16,7 @@
         { action: 'permit', type: 'channelOrTitle', keywords: ['Meditation', 'Singing Bowls', 'ASMR', 'Exercise', 'Breathing', 'Mindfulness', 'Workout', 'Visualisation', 'Visualization', "Mind's Eye"] },
     ];
 
-    const MEDITATION_DURATION = 5 * 60 * 1000;
+    const MEDITATION_DURATION_S = 5 * 60;
     const BREATHING_PATTERNS = [
         { name: 'Box Breathing', steps: [['Breathe in', 4], ['Hold', 4], ['Breathe out', 4], ['Hold', 4]] },
         { name: '4-7-8 Breathing', steps: [['Breathe in', 4], ['Hold', 7], ['Breathe out', 8]] },
@@ -137,7 +137,7 @@
       const oneCycleDuration = pattern.steps
         .map(([_name, duration]) => duration)
         .reduce((prev, current) => prev + current, 0);
-      const cycles = MEDITATION_DURATION / oneCycleDuration;
+      const cycles = MEDITATION_DURATION_S / oneCycleDuration;
       return Math.ceil(cycles);
     }
 

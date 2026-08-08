@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        all-userscripts-bundle
 // @description Combined bundle of all userscripts in this repo (each sub-script only runs on its original matched sites) — install this instead of individual scripts to keep everything updated in one place
-// @version     0.3
+// @version     0.4
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -2360,7 +2360,7 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href))) return;
         { action: 'permit', type: 'channelOrTitle', keywords: ['Meditation', 'Singing Bowls', 'ASMR', 'Exercise', 'Breathing', 'Mindfulness', 'Workout', 'Visualisation', 'Visualization', "Mind's Eye"] },
     ];
 
-    const MEDITATION_DURATION = 5 * 60 * 1000;
+    const MEDITATION_DURATION_S = 5 * 60;
     const BREATHING_PATTERNS = [
         { name: 'Box Breathing', steps: [['Breathe in', 4], ['Hold', 4], ['Breathe out', 4], ['Hold', 4]] },
         { name: '4-7-8 Breathing', steps: [['Breathe in', 4], ['Hold', 7], ['Breathe out', 8]] },
@@ -2481,7 +2481,7 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href))) return;
       const oneCycleDuration = pattern.steps
         .map(([_name, duration]) => duration)
         .reduce((prev, current) => prev + current, 0);
-      const cycles = MEDITATION_DURATION / oneCycleDuration;
+      const cycles = MEDITATION_DURATION_S / oneCycleDuration;
       return Math.ceil(cycles);
     }
 
