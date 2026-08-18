@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        night-video
-// @description Fullscreen video filters (edge detect, sharpen, grayscale, emboss) for OLED night viewing
-// @version     1.2.2
+// @description Fullscreen edge-detection filter for OLED night viewing
+// @version     1.3.0
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -13,14 +13,11 @@
   'use strict';
 
   const STORAGE_KEY = 'night_video_v1';
+  const DIM_ORIGINAL_ENABLED = false;
 
   const FILTERS = [
     { id: null, title: 'Night Video: OFF' },
     { id: 'night-video-1', title: 'Night Video: Edge Detect' },
-    { id: 'night-video-2', title: 'Night Video: Sharpen + Dim' },
-    { id: 'night-video-3', title: 'Night Video: High Contrast Gray' },
-    { id: 'night-video-4', title: 'Night Video: Edges + Dim Original' },
-    { id: 'night-video-5', title: 'Night Video: Emboss' },
   ];
 
   let filterIndex = 0;
@@ -82,51 +79,23 @@
       return m;
     }
 
-    // Filter 1: Edge detect
+    // Filter 1: Edge detect, optionally blended over a dimmed original.
+    // Contrast is boosted before the edge kernel runs so subtle dark-brown-vs-black
+    // luminance differences (e.g. chess pieces/board) still produce a detectable edge.
     var f1 = document.createElementNS(ns, 'filter');
     f1.setAttribute('id', 'night-video-1');
-    f1.appendChild(makeConvolve('0 -1 0 -1 4 -1 0 -1 0', 'edges'));
-    f1.appendChild(makeDilate(2, 'edges'));
+    f1.appendChild(makeLinearComponentTransfer(3, -0.6, 'SourceGraphic', 'contrastBoosted'));
+    f1.appendChild(makeConvolve('0 -1 0 -1 4 -1 0 -1 0', 'edgesRaw', 'contrastBoosted'));
+    f1.appendChild(makeDilate(2, 'edgesRaw', 'edges'));
+    if (DIM_ORIGINAL_ENABLED) {
+      f1.appendChild(makeLinearComponentTransfer(0.25, 0, 'SourceGraphic', 'dim'));
+      var blend = document.createElementNS(ns, 'feBlend');
+      blend.setAttribute('mode', 'screen');
+      blend.setAttribute('in', 'dim');
+      blend.setAttribute('in2', 'edges');
+      f1.appendChild(blend);
+    }
     svgFilter.appendChild(f1);
-
-    // Filter 2: Sharpen + dim
-    var f2 = document.createElementNS(ns, 'filter');
-    f2.setAttribute('id', 'night-video-2');
-    f2.appendChild(makeConvolve('0 -1 0 -1 6 -1 0 -1 0', 'sharpened'));
-    f2.appendChild(makeDilate(1, 'sharpened'));
-    f2.appendChild(makeLinearComponentTransfer(0.3, 0));
-    svgFilter.appendChild(f2);
-
-    // Filter 3: High contrast grayscale
-    var f3 = document.createElementNS(ns, 'filter');
-    f3.setAttribute('id', 'night-video-3');
-    var saturate = document.createElementNS(ns, 'feColorMatrix');
-    saturate.setAttribute('type', 'saturate');
-    saturate.setAttribute('values', '0');
-    f3.appendChild(saturate);
-    f3.appendChild(makeLinearComponentTransfer(2, -0.4));
-    f3.appendChild(makeLinearComponentTransfer(0.4, 0));
-    svgFilter.appendChild(f3);
-
-    // Filter 4: Edges blended with dim original
-    var f4 = document.createElementNS(ns, 'filter');
-    f4.setAttribute('id', 'night-video-4');
-    f4.appendChild(makeLinearComponentTransfer(0.25, 0, 'SourceGraphic', 'dim'));
-    f4.appendChild(makeConvolve('0 -1 0 -1 4 -1 0 -1 0', 'edgesRaw', 'SourceGraphic'));
-    f4.appendChild(makeDilate(2, 'edgesRaw', 'edges'));
-    var blend = document.createElementNS(ns, 'feBlend');
-    blend.setAttribute('mode', 'screen');
-    blend.setAttribute('in', 'dim');
-    blend.setAttribute('in2', 'edges');
-    f4.appendChild(blend);
-    svgFilter.appendChild(f4);
-
-    // Filter 5: Emboss
-    var f5 = document.createElementNS(ns, 'filter');
-    f5.setAttribute('id', 'night-video-5');
-    f5.appendChild(makeConvolve('-2 -1 0 -1 1 1 0 1 2', 'embossed'));
-    f5.appendChild(makeDilate(1, 'embossed'));
-    svgFilter.appendChild(f5);
 
     document.body.appendChild(svgFilter);
   }
