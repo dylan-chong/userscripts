@@ -1,10 +1,6 @@
 #!/bin/bash
 
-set -ex
-
-cd "$(git rev-parse --show-toplevel)"
-node builder/build.js
-git add build/all.user.js
+set -e
 
 failed=0
 

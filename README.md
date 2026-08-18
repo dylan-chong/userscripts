@@ -22,7 +22,22 @@ Instead of installing each script below individually, you can install a single c
 
 [Install combined bundle](https://raw.githubusercontent.com/dylan-chong/userscripts/main/build/all.user.js)
 
-The bundle is regenerated from the individual scripts via `builder/build.js` on every commit (see `.githooks/pre-commit`).
+The bundle is automatically built on commit via the pre-commit hook. To build and release:
+
+```bash
+node builder/build.js
+git add build/all.user.js
+git commit -m "MOD: build/all.user.js"
+git push
+```
+
+### Setup
+
+Configure git to use the `.githooks` directory (one-time):
+
+```bash
+git config core.hooksPath .githooks
+```
 
 ## Scripts
 
