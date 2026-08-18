@@ -96,6 +96,13 @@ function buildHeader(version) {
     ].join('\n');
 }
 
+function bumpVersion(version) {
+    var parts = version.split('.');
+    var major = parseInt(parts[0], 10);
+    var minor = parseInt(parts[1], 10);
+    return major + '.' + (minor + 1);
+}
+
 function main() {
     var files = fs
         .readdirSync(ROOT)
@@ -116,13 +123,14 @@ function main() {
     var scripts = files.map(function (f) { return parseUserScript(path.join(ROOT, f)); });
 
     var version = readExistingVersion();
-    var header = buildHeader(version);
+    var newVersion = bumpVersion(version);
+    var header = buildHeader(newVersion);
     var body = scripts.map(wrapWithMatchGuard).join('\n');
 
     fs.mkdirSync(OUTPUT_DIR, { recursive: true });
     fs.writeFileSync(OUTPUT_PATH, header + '\n' + body);
 
-    console.log('Built ' + path.relative(ROOT, OUTPUT_PATH) + ' from ' + scripts.length + ' scripts (version ' + version + ')');
+    console.log('Built ' + path.relative(ROOT, OUTPUT_PATH) + ' from ' + scripts.length + ' scripts (version ' + version + ' → ' + newVersion + ')');
 }
 
 main();
