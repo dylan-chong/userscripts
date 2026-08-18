@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        all-userscripts-bundle
 // @description Combined bundle of all userscripts in this repo (each sub-script only runs on its original matched sites) — install this instead of individual scripts to keep everything updated in one place
-// @version     0.5
+// @version     0.6
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -2356,18 +2356,18 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href))) return;
     const MEDITATION_VIDEO_URL = 'https://www.youtube.com/watch?v=MK3lB-uY0gE';
 
     const CRITERIA = [
-        { action: 'delay', type: 'channelOrTitle', keywords: ['Naroditsky', 'Mini Motorways'] },
+        { action: 'delay', type: 'channelOrTitle', keywords: ['Naroditsky'] },
         { action: 'permit', type: 'channelOrTitle', keywords: ['Meditation', 'Singing Bowls', 'ASMR', 'Exercise', 'Breathing', 'Mindfulness', 'Workout', 'Visualisation', 'Visualization', "Mind's Eye"] },
     ];
 
-    const MEDITATION_DURATION_S = 5 * 60;
+    const MEDITATION_DURATION_S = 10 * 60;
     const BREATHING_PATTERNS = [
         { name: 'Box Breathing', steps: [['Breathe in', 4], ['Hold', 4], ['Breathe out', 4], ['Hold', 4]] },
         { name: '4-7-8 Breathing', steps: [['Breathe in', 4], ['Hold', 7], ['Breathe out', 8]] },
-        { name: 'Simple Breathing', steps: [['Breathe in', 4], ['Breathe out', 4]] },
+        { name: 'Simple Breathing', steps: [['Breathe in', 6], ['Breathe out', 6]] },
     ];
 
-    const COOLDOWN_MS = 30 * 60 * 1000;
+    const COOLDOWN_MS = 60 * 60 * 1000;
     const COOLDOWN_STORAGE_KEY = 'yt-time-waste-blocker-last-completed';
     let lastCompletedAt = parseInt(localStorage.getItem(COOLDOWN_STORAGE_KEY)) || 0;
     let activeOverlay = null;
