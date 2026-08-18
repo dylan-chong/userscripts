@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        all-userscripts-bundle
 // @description Combined bundle of all userscripts in this repo (each sub-script only runs on its original matched sites) — install this instead of individual scripts to keep everything updated in one place
-// @version     0.6
+// @version     0.1076
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -827,8 +827,10 @@ if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
   const STORAGE_KEY = 'dim_mode_v1';
   const MODES = [
     { label: 'D', title: 'Dim: OFF', opacity: 0 },
-    { label: 'D', title: 'Dim: 70%', opacity: 0.7 },
-    { label: 'D', title: 'Dim: 40% brightness', opacity: 0.6 },
+    { label: 'D', title: 'Dim: 85%', opacity: 0.85 },
+    { label: 'D', title: 'Dim: 70%', opacity: 0.70 },
+    { label: 'D', title: 'Dim: 55%', opacity: 0.55 },
+    { label: 'D', title: 'Dim: 40%', opacity: 0.40 }
   ];
 
   let modeIndex = 0;
