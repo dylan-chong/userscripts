@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        all-userscripts-bundle
 // @description Combined bundle of all userscripts in this repo (each sub-script only runs on its original matched sites) — install this instead of individual scripts to keep everything updated in one place
-// @version     0.1079
+// @version     0.1080
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -1232,39 +1232,6 @@ if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
     });
     observer.observe(document.documentElement, { childList: true });
   }
-})();
-})();
-
-// oauth-auto-close.user.js
-(function () {
-if (!(/^http:\/\/127\.0\.0\.1:56536\/oauth\/callback.*$/.test(location.href))) return;
-(function () {
-    const MESSAGE = 'can be used until your session expires';
-    const log = (...args) => console.log('[oauth-auto-close]', ...args);
-
-    log('Script loaded on', window.location.href);
-
-    function checkAndClose() {
-        const text = document.body ? document.body.textContent : '';
-        log('Checking body text:', JSON.stringify(text.substring(0, 200)));
-        if (text.includes(MESSAGE)) {
-            log('Message found! Closing tab in 1 second...');
-            setTimeout(() => window.close(), 1000);
-            return true;
-        }
-        log('Message not found');
-        return false;
-    }
-
-    if (checkAndClose()) return;
-
-    log('Setting up polling (every 250ms)');
-    const intervalId = setInterval(() => {
-        if (checkAndClose()) {
-            log('Polling triggered close');
-            clearInterval(intervalId);
-        }
-    }, 250);
 })();
 })();
 
