@@ -36,7 +36,7 @@ git config core.hooksPath .githooks
 
 | Script | Description | Install |
 |--------|-------------|---------|
-| **Chess Quadrant Lines** | Draw black lines splitting the chess.com board into quadrants (uses floating menu) | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/chess-quadrant-lines.user.js) |
+| **Chess Quadrant Lines** | Draw quadrant lines and blur mode for chess.com board (uses floating menu) | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/chess-quadrant-lines.user.js) |
 | **Facebook Messenger No Header** | Hides the header bar on messenger.com to remove notifications and marketplace | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/facebook-messenger-no-header.user.js) |
 | **Floating Menu** | Shared floating button menu for userscripts (required by dark mode and github-circleci) | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/floating-menu.user.js) |
 | **GitHub CircleCI** | Adds a button to open the CircleCI pipeline for the current GitHub repo/PR (uses floating menu) | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/github-circleci.user.js) |
@@ -54,27 +54,5 @@ git config core.hooksPath .githooks
 | **YouTube No Comments** | Hide all YouTube comments on desktop and mobile | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-no-comments.user.js) |
 | **YouTube No Suggestions** | Remove all YouTube video suggestions (sidebar, homepage, end screen) | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-no-suggestions.user.js) |
 | **YouTube Time Waste Blocker** | Block or gate YouTube videos with deny/delay/permit categories and breathing exercises | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js) |
-
-
-## Install all
-
-```
-open https://raw.githubusercontent.com/dylan-chong/userscripts/main/floating-menu.user.js
-open https://raw.githubusercontent.com/dylan-chong/userscripts/main/chess-quadrant-lines.user.js
-open https://raw.githubusercontent.com/dylan-chong/userscripts/main/facebook-messenger-no-header.user.js
-open https://raw.githubusercontent.com/dylan-chong/userscripts/main/github-circleci.user.js
-open https://raw.githubusercontent.com/dylan-chong/userscripts/main/facebook-no-feed.user.js
-open https://raw.githubusercontent.com/dylan-chong/userscripts/main/poker-clock-remove-ui.user.js
-open https://raw.githubusercontent.com/dylan-chong/userscripts/main/poker-chip-forum-read-listings.user.js
-open https://raw.githubusercontent.com/dylan-chong/userscripts/main/dark-mode.user.js
-open https://raw.githubusercontent.com/dylan-chong/userscripts/main/dim-mode.user.js
-open https://raw.githubusercontent.com/dylan-chong/userscripts/main/night-video.user.js
-open https://raw.githubusercontent.com/dylan-chong/userscripts/main/watch-south-park-popup-blocker.user.js
-open https://raw.githubusercontent.com/dylan-chong/userscripts/main/watch-south-park-iframe-popup-blocker.user.js
-open https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-block-autoplay.user.js
-open https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-no-subscriptions.user.js
-open https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-redirect.user.js
-open https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-no-comments.user.js
-open https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-no-suggestions.user.js
-open https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js
-```
+|---|---|---|
+| **All scripts (combined bundle)** | Bundles every script above into one; each still only runs on the sites it originally targeted | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/build/all.user.js) |
