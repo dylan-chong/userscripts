@@ -1,8 +1,10 @@
 // ==UserScript==
 // @name        youtube-block-autoplay
 // @description Block playlist autoplay while allowing manual next
-// @version     1.0
-// @match       *://*.youtube.com/*
+// @version     1.1
+// @match       *://www.youtube.com/*
+// @match       *://youtube.com/*
+// @match       *://m.youtube.com/*
 // @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-block-autoplay.user.js
 // @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-block-autoplay.user.js
 // ==/UserScript==

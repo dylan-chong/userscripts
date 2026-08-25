@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        all-userscripts-bundle
 // @description Combined bundle of all userscripts in this repo (each sub-script only runs on its original matched sites) — install this instead of individual scripts to keep everything updated in one place
-// @version     0.1082
+// @version     0.1083
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -2043,7 +2043,7 @@ if (!(/^https:\/\/watchsouthpark\.tv\/.*$/.test(location.href) || /^https:\/\/.*
 
 // youtube-block-autoplay.user.js
 (function () {
-if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href))) return;
+if (!(/^.*:\/\/www\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/youtube\.com\/.*$/.test(location.href) || /^.*:\/\/m\.youtube\.com\/.*$/.test(location.href))) return;
 (function () {
     const BLOCK_AUTOPLAY_BTN_ID = 'yt-block-playlist-autoplay-btn';
     const STORAGE_KEY = 'yt-block-playlist-autoplay';
