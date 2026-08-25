@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        night-video
-// @description Fullscreen edge-detection filter for OLED night viewing
-// @version     1.7.0
+// @description Fullscreen edge-detection filter for OLED night viewing (requires floating-menu script)
+// @version     1.7.1
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none

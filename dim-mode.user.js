@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        dim-mode
-// @description Dim overlay for OLED screens
-// @version     2.2.0
+// @description Dim overlay for OLED screens (requires floating-menu script)
+// @version     2.2.1
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none

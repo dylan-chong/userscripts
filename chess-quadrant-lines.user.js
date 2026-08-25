@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        chess-quadrant-lines
-// @description Draw quadrant lines and blur mode for chess.com board
-// @version     2.1.1
+// @description Draw quadrant lines and blur mode for chess.com board (requires floating-menu script)
+// @version     2.1.2
 // @match       *://*.chess.com/*
 // @run-at      document-idle
 // @grant       none

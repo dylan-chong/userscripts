@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        github-circleci
-// @description Add a button to open CircleCI pipeline for the current GitHub repo/PR
-// @version     1.1
+// @description Add a button to open CircleCI pipeline for the current GitHub repo/PR (requires floating-menu script)
+// @version     1.2
 // @match       *://github.com/*/*
 // @grant       none
 // @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/github-circleci.user.js

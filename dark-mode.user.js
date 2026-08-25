@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Simple Dark Mode (Invert)
 // @namespace    http://tampermonkey.net/
-// @version      6.1
-// @description  Apply dark mode to websites using color inversion with toggles
+// @version      6.2
+// @description  Apply dark mode to websites using color inversion with toggles (requires floating-menu script)
 // @author       You
 // @match        *://*/*
 // @run-at       document-start

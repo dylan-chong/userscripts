@@ -36,14 +36,14 @@ git config core.hooksPath .githooks
 
 | Script | Description | Install |
 |--------|-------------|---------|
-| **Chess Quadrant Lines** | Draw black lines splitting the chess.com board into quadrants | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/chess-quadrant-lines.user.js) |
+| **Chess Quadrant Lines** | Draw black lines splitting the chess.com board into quadrants (uses floating menu) | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/chess-quadrant-lines.user.js) |
 | **Facebook Messenger No Header** | Hides the header bar on messenger.com to remove notifications and marketplace | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/facebook-messenger-no-header.user.js) |
 | **Floating Menu** | Shared floating button menu for userscripts (required by dark mode and github-circleci) | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/floating-menu.user.js) |
-| **GitHub CircleCI** | Adds a button to open the CircleCI pipeline for the current GitHub repo/PR | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/github-circleci.user.js) |
+| **GitHub CircleCI** | Adds a button to open the CircleCI pipeline for the current GitHub repo/PR (uses floating menu) | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/github-circleci.user.js) |
 | **Facebook No Feed** | Hides the Facebook news feed and shows a "Don't waste time" message | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/facebook-no-feed.user.js) |
 | **Poker Clock Remove UI** | Removes extra UI elements from clock.poker for a cleaner view | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/poker-clock-remove-ui.user.js) |
 | **PokerChipForum Viewed Listings Tracker** | Grey out viewed listings on PokerChipForum marketplace with image previews | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/poker-chip-forum-read-listings.user.js) |
-| **Simple Dark Mode (Invert)** | Apply dark mode to any website using color inversion with toggles | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/dark-mode.user.js) |
+| **Simple Dark Mode (Invert)** | Apply dark mode to any website using color inversion with toggles (uses floating menu) | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/dark-mode.user.js) |
 | **Dim Mode** | Dim overlay for OLED screens (uses floating menu) | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/dim-mode.user.js) |
 | **Night Video** | Fullscreen edge-detection video filter for OLED night viewing (uses floating menu) | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/night-video.user.js) |
 | **South Park TV Pop-up Blocker** | Prevents new tabs/windows from opening on watchsouthpark.tv | [Install](https://raw.githubusercontent.com/dylan-chong/userscripts/main/watch-south-park-popup-blocker.user.js) |
