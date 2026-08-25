@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        night-video
 // @description Fullscreen edge-detection filter for OLED night viewing
-// @version     1.3.0
+// @version     1.7.0
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -13,11 +13,11 @@
   'use strict';
 
   const STORAGE_KEY = 'night_video_v1';
-  const DIM_ORIGINAL_ENABLED = false;
 
   const FILTERS = [
     { id: null, title: 'Night Video: OFF' },
     { id: 'night-video-1', title: 'Night Video: Edge Detect' },
+    { id: 'night-video-1-dim', title: 'Night Video: Edge Detect + Dim Original' },
   ];
 
   let filterIndex = 0;
@@ -70,6 +70,21 @@
       return ct;
     }
 
+    function makeGammaComponentTransfer(exponent, inName, resultName) {
+      var ct = document.createElementNS(ns, 'feComponentTransfer');
+      if (inName) ct.setAttribute('in', inName);
+      if (resultName) ct.setAttribute('result', resultName);
+      ['feFuncR', 'feFuncG', 'feFuncB'].forEach(function (tag) {
+        var fn = document.createElementNS(ns, tag);
+        fn.setAttribute('type', 'gamma');
+        fn.setAttribute('amplitude', '1');
+        fn.setAttribute('exponent', String(exponent));
+        fn.setAttribute('offset', '0');
+        ct.appendChild(fn);
+      });
+      return ct;
+    }
+
     function makeDilate(radius, inName, resultName) {
       var m = document.createElementNS(ns, 'feMorphology');
       m.setAttribute('operator', 'dilate');
@@ -79,23 +94,30 @@
       return m;
     }
 
-    // Filter 1: Edge detect, optionally blended over a dimmed original.
-    // Contrast is boosted before the edge kernel runs so subtle dark-brown-vs-black
-    // luminance differences (e.g. chess pieces/board) still produce a detectable edge.
-    var f1 = document.createElementNS(ns, 'filter');
-    f1.setAttribute('id', 'night-video-1');
-    f1.appendChild(makeLinearComponentTransfer(3, -0.6, 'SourceGraphic', 'contrastBoosted'));
-    f1.appendChild(makeConvolve('0 -1 0 -1 4 -1 0 -1 0', 'edgesRaw', 'contrastBoosted'));
-    f1.appendChild(makeDilate(2, 'edgesRaw', 'edges'));
-    if (DIM_ORIGINAL_ENABLED) {
-      f1.appendChild(makeLinearComponentTransfer(0.25, 0, 'SourceGraphic', 'dim'));
-      var blend = document.createElementNS(ns, 'feBlend');
-      blend.setAttribute('mode', 'screen');
-      blend.setAttribute('in', 'dim');
-      blend.setAttribute('in2', 'edges');
-      f1.appendChild(blend);
+    // Edge detect, optionally blended over a dimmed original.
+    // Per-channel gamma expansion (exponent < 1) pulls apart near-black RGB values
+    // before the edge kernel runs, so dark-brown/dark-blue-vs-black (small per-channel
+    // differences that a linear contrast boost would clip to 0) still produce a
+    // detectable edge.
+    function makeEdgeDetectFilter(id, dimOriginal) {
+      var f = document.createElementNS(ns, 'filter');
+      f.setAttribute('id', id);
+      f.appendChild(makeGammaComponentTransfer(0.35, 'SourceGraphic', 'contrastBoosted'));
+      f.appendChild(makeConvolve('0 -1 0 -1 4 -1 0 -1 0', 'edgesRaw', 'contrastBoosted'));
+      f.appendChild(makeDilate(2, 'edgesRaw', 'edges'));
+      if (dimOriginal) {
+        f.appendChild(makeLinearComponentTransfer(0.05, 0, 'SourceGraphic', 'dim'));
+        var blend = document.createElementNS(ns, 'feBlend');
+        blend.setAttribute('mode', 'screen');
+        blend.setAttribute('in', 'dim');
+        blend.setAttribute('in2', 'edges');
+        f.appendChild(blend);
+      }
+      return f;
     }
-    svgFilter.appendChild(f1);
+
+    svgFilter.appendChild(makeEdgeDetectFilter('night-video-1', false));
+    svgFilter.appendChild(makeEdgeDetectFilter('night-video-1-dim', true));
 
     document.body.appendChild(svgFilter);
   }
@@ -118,10 +140,14 @@
     container.style.cssText =
       'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999997;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;';
 
+    var canvasArea = document.createElement('div');
+    canvasArea.style.cssText = 'width:100%;height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;';
+
     var canvas = document.createElement('canvas');
     canvas.style.cssText =
-      'filter:url(#' + FILTERS[filterIndex].id + ');max-width:100vw;max-height:calc(100vh - 60px);';
-    container.appendChild(canvas);
+      'filter:url(#' + FILTERS[filterIndex].id + ');width:100%;height:100%;object-fit:contain;';
+    canvasArea.appendChild(canvas);
+    container.appendChild(canvasArea);
 
     var controls = document.createElement('div');
     controls.style.cssText = 'display:flex;gap:16px;padding:12px;';
