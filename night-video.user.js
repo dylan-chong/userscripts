@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        night-video
 // @description Fullscreen edge-detection filter for OLED night viewing (requires floating-menu script)
-// @version     1.7.1
+// @version     1.8.0
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -19,6 +19,14 @@
     { id: 'night-video-1', title: 'Night Video: Edge Detect' },
     { id: 'night-video-1-dim', title: 'Night Video: Edge Detect + Dim Original' },
   ];
+
+  // Gamma exponent < 1 pulls apart near-black RGB values before the edge kernel
+  // runs, so dark-brown/dark-blue-vs-black differences still produce a detectable edge.
+  const EDGE_DETECT_GAMMA_EXPONENT = 0.35;
+  // feMorphology dilate radius controlling rendered edge line thickness.
+  const EDGE_DETECT_LINE_RADIUS = 3;
+  // Brightness slope applied to the original image in the "dim original" variant.
+  const EDGE_DETECT_DIM_ORIGINAL_SLOPE = 0.05;
 
   let filterIndex = 0;
   let svgFilter = null;
@@ -95,18 +103,14 @@
     }
 
     // Edge detect, optionally blended over a dimmed original.
-    // Per-channel gamma expansion (exponent < 1) pulls apart near-black RGB values
-    // before the edge kernel runs, so dark-brown/dark-blue-vs-black (small per-channel
-    // differences that a linear contrast boost would clip to 0) still produce a
-    // detectable edge.
     function makeEdgeDetectFilter(id, dimOriginal) {
       var f = document.createElementNS(ns, 'filter');
       f.setAttribute('id', id);
-      f.appendChild(makeGammaComponentTransfer(0.35, 'SourceGraphic', 'contrastBoosted'));
+      f.appendChild(makeGammaComponentTransfer(EDGE_DETECT_GAMMA_EXPONENT, 'SourceGraphic', 'contrastBoosted'));
       f.appendChild(makeConvolve('0 -1 0 -1 4 -1 0 -1 0', 'edgesRaw', 'contrastBoosted'));
-      f.appendChild(makeDilate(2, 'edgesRaw', 'edges'));
+      f.appendChild(makeDilate(EDGE_DETECT_LINE_RADIUS, 'edgesRaw', 'edges'));
       if (dimOriginal) {
-        f.appendChild(makeLinearComponentTransfer(0.05, 0, 'SourceGraphic', 'dim'));
+        f.appendChild(makeLinearComponentTransfer(EDGE_DETECT_DIM_ORIGINAL_SLOPE, 0, 'SourceGraphic', 'dim'));
         var blend = document.createElementNS(ns, 'feBlend');
         blend.setAttribute('mode', 'screen');
         blend.setAttribute('in', 'dim');
