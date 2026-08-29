@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        all-userscripts-bundle
 // @description Combined bundle of all userscripts in this repo (each sub-script only runs on its original matched sites) — install this instead of individual scripts to keep everything updated in one place
-// @version     0.1091
+// @version     0.1092
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -1033,18 +1033,20 @@ if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
   const STORAGE_KEY = 'night_video_v1';
 
   const FILTERS = [
-    { id: null, title: 'Night Video: OFF' },
-    { id: 'night-video-1', title: 'Night Video: Edge Detect' },
-    { id: 'night-video-1-dim', title: 'Night Video: Edge Detect + Dim Original' },
+    { id: null, gamma: 0, lineRadius: 0, dim: 0 },
+    // Gamma exponent < 1 pulls apart near-black RGB values before the edge kernel
+    // runs, so dark-brown/dark-blue-vs-black differences still produce a detectable edge.
+    // lineRadius is the feMorphology dilate radius controlling rendered edge line thickness.
+    // dim is the brightness slope applied to the original image before blending it under the edges.
+    { id: 'night-video-1', gamma: 0.35, lineRadius: 5, dim: 0 },
+    { id: 'night-video-2', gamma: 0.35, lineRadius: 5, dim: 0.1 },
+    { id: 'night-video-3', gamma: 0.35, lineRadius: 5, dim: 0.2 },
   ];
 
-  // Gamma exponent < 1 pulls apart near-black RGB values before the edge kernel
-  // runs, so dark-brown/dark-blue-vs-black differences still produce a detectable edge.
-  const EDGE_DETECT_GAMMA_EXPONENT = 0.35;
-  // feMorphology dilate radius controlling rendered edge line thickness.
-  const EDGE_DETECT_LINE_RADIUS = 5;
-  // Brightness slope applied to the original image in the "dim original" variant.
-  const EDGE_DETECT_DIM_ORIGINAL_SLOPE = 0.1;
+  function filterTitle(filter) {
+    if (!filter.id) return 'Night Video: OFF';
+    return 'Night Video: Edge Detect' + (filter.dim ? ' + Dim Original' : '');
+  }
 
   let filterIndex = 0;
   let svgFilter = null;
@@ -1121,14 +1123,14 @@ if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
     }
 
     // Edge detect, optionally blended over a dimmed original.
-    function makeEdgeDetectFilter(id, dimOriginal) {
+    function makeEdgeDetectFilter(id, gamma, lineRadius, dimSlope) {
       var f = document.createElementNS(ns, 'filter');
       f.setAttribute('id', id);
-      f.appendChild(makeGammaComponentTransfer(EDGE_DETECT_GAMMA_EXPONENT, 'SourceGraphic', 'contrastBoosted'));
+      f.appendChild(makeGammaComponentTransfer(gamma, 'SourceGraphic', 'contrastBoosted'));
       f.appendChild(makeConvolve('0 -1 0 -1 4 -1 0 -1 0', 'edgesRaw', 'contrastBoosted'));
-      f.appendChild(makeDilate(EDGE_DETECT_LINE_RADIUS, 'edgesRaw', 'edges'));
-      if (dimOriginal) {
-        f.appendChild(makeLinearComponentTransfer(EDGE_DETECT_DIM_ORIGINAL_SLOPE, 0, 'SourceGraphic', 'dim'));
+      f.appendChild(makeDilate(lineRadius, 'edgesRaw', 'edges'));
+      if (dimSlope) {
+        f.appendChild(makeLinearComponentTransfer(dimSlope, 0, 'SourceGraphic', 'dim'));
         var blend = document.createElementNS(ns, 'feBlend');
         blend.setAttribute('mode', 'screen');
         blend.setAttribute('in', 'dim');
@@ -1138,8 +1140,10 @@ if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
       return f;
     }
 
-    svgFilter.appendChild(makeEdgeDetectFilter('night-video-1', false));
-    svgFilter.appendChild(makeEdgeDetectFilter('night-video-1-dim', true));
+    FILTERS.forEach(function (filter) {
+      if (!filter.id) return;
+      svgFilter.appendChild(makeEdgeDetectFilter(filter.id, filter.gamma, filter.lineRadius, filter.dim));
+    });
 
     document.body.appendChild(svgFilter);
   }
@@ -1225,7 +1229,7 @@ if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
     }
     if (button) {
       button.textContent = '📺';
-      button.title = FILTERS[filterIndex].title;
+      button.title = filterTitle(FILTERS[filterIndex]);
     }
   }
 
@@ -1242,7 +1246,7 @@ if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
         clearInterval(poll);
         button = window.__userscriptFloatingMenu.addButton(
           '📺',
-          FILTERS[filterIndex].title,
+          filterTitle(FILTERS[filterIndex]),
           cycle,
           { group: 'video', sortKey: 13 }
         );
