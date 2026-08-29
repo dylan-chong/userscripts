@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        all-userscripts-bundle
 // @description Combined bundle of all userscripts in this repo (each sub-script only runs on its original matched sites) — install this instead of individual scripts to keep everything updated in one place
-// @version     0.1089
+// @version     0.1091
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -1042,9 +1042,9 @@ if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
   // runs, so dark-brown/dark-blue-vs-black differences still produce a detectable edge.
   const EDGE_DETECT_GAMMA_EXPONENT = 0.35;
   // feMorphology dilate radius controlling rendered edge line thickness.
-  const EDGE_DETECT_LINE_RADIUS = 3;
+  const EDGE_DETECT_LINE_RADIUS = 5;
   // Brightness slope applied to the original image in the "dim original" variant.
-  const EDGE_DETECT_DIM_ORIGINAL_SLOPE = 0.05;
+  const EDGE_DETECT_DIM_ORIGINAL_SLOPE = 0.1;
 
   let filterIndex = 0;
   let svgFilter = null;
