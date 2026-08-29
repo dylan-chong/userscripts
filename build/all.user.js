@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        all-userscripts-bundle
 // @description Combined bundle of all userscripts in this repo (each sub-script only runs on its original matched sites) — install this instead of individual scripts to keep everything updated in one place
-// @version     0.1092
+// @version     0.1093
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -2233,7 +2233,7 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href))) return;
         });
     }
 
-    setInterval(hideComments, 500);
+    // setInterval(hideComments, 500);
 })();
 })();
 
@@ -2328,7 +2328,7 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href))) return;
     const MEDITATION_VIDEO_URL = 'https://www.youtube.com/watch?v=MK3lB-uY0gE';
 
     const CRITERIA = [
-        { action: 'delay', type: 'channelOrTitle', keywords: ['Naroditsky'] },
+        { action: 'delay', type: 'channelOrTitle', keywords: ['Naroditsky', 'Knights', 'Chess'] },
         { action: 'permit', type: 'channelOrTitle', keywords: ['Meditation', 'Singing Bowls', 'ASMR', 'Exercise', 'Breathing', 'Mindfulness', 'Workout', 'Visualisation', 'Visualization', "Mind's Eye"] },
     ];
 
