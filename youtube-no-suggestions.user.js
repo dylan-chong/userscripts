@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        youtube-no-suggestions
 // @description Remove all YouTube video suggestions (sidebar, homepage, end screen)
-// @version     1.0
+// @version     1.1
 // @match       *://*.youtube.com/*
 // @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-no-suggestions.user.js
 // @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-no-suggestions.user.js
@@ -31,12 +31,5 @@
         }
     }
 
-    function redirectHomepage() {
-        if (window.location.pathname === '/' || window.location.pathname === '/feed') {
-            window.location.replace('https://www.youtube.com/feed/subscriptions');
-        }
-    }
-
-    redirectHomepage();
-    setInterval(hideSuggestions, 500);
+    // setInterval(hideSuggestions, 500);
 })();

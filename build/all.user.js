@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        all-userscripts-bundle
 // @description Combined bundle of all userscripts in this repo (each sub-script only runs on its original matched sites) — install this instead of individual scripts to keep everything updated in one place
-// @version     0.1093
+// @version     0.1094
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -2233,7 +2233,7 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href))) return;
         });
     }
 
-    // setInterval(hideComments, 500);
+    setInterval(hideComments, 500);
 })();
 })();
 
@@ -2280,14 +2280,7 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href))) return;
         }
     }
 
-    function redirectHomepage() {
-        if (window.location.pathname === '/' || window.location.pathname === '/feed') {
-            window.location.replace('https://www.youtube.com/feed/subscriptions');
-        }
-    }
-
-    redirectHomepage();
-    setInterval(hideSuggestions, 500);
+    // setInterval(hideSuggestions, 500);
 })();
 })();
 
