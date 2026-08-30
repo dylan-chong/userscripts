@@ -12,7 +12,7 @@
   const MEDITATION_VIDEO_URL = 'https://www.youtube.com/watch?v=MK3lB-uY0gE';
 
   const CRITERIA = [
-    { action: 'delay', type: 'channelOrTitle', keywords: ['Naroditsky', 'Knights', 'Chess', 'Loresmith'] },
+    { action: 'delay', type: 'channelOrTitle', keywords: ['Naroditsky', 'Knights', 'Chess', 'Loresmith', 'Keyboard'] },
     { action: 'permit', type: 'channelOrTitle', keywords: ['Meditation', 'Singing Bowls', 'ASMR', 'Exercise', 'Breathing', 'Mindfulness', 'Workout', 'Visualisation', 'Visualization', "Mind's Eye"] },
   ];
 
