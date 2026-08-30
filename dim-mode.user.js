@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        dim-mode
 // @description Dim overlay for OLED screens (requires floating-menu script)
-// @version     2.3.1
+// @version     2.3.2
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -63,9 +63,7 @@
   }
 
   function cycleMode() {
-    console.log('cycleMode', modeIndex, MODES[modeIndex]);
     modeIndex = (modeIndex + 1) % MODES.length;
-    console.log('cycleMode', modeIndex, MODES[modeIndex]);
     saveMode();
     applyMode();
   }

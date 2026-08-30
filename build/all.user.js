@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        all-userscripts-bundle
 // @description Combined bundle of all userscripts in this repo (each sub-script only runs on its original matched sites) — install this instead of individual scripts to keep everything updated in one place
-// @version     0.1101
+// @version     0.1102
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -875,9 +875,7 @@ if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
   }
 
   function cycleMode() {
-    console.log('cycleMode', modeIndex, MODES[modeIndex]);
     modeIndex = (modeIndex + 1) % MODES.length;
-    console.log('cycleMode', modeIndex, MODES[modeIndex]);
     saveMode();
     applyMode();
   }
