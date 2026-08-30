@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        dim-mode
 // @description Dim overlay for OLED screens (requires floating-menu script)
-// @version     2.3.0
+// @version     2.3.1
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -17,7 +17,7 @@
     { label: 'D', title: 'Dim: OFF', opacity: 0 },
     { label: 'D', title: 'Dim: 20%', opacity: 0.20 },
     { label: 'D', title: 'Dim: 40%', opacity: 0.40 },
-    { label: 'D', title: 'Dim: 60%', opacity: 0.40 },
+    { label: 'D', title: 'Dim: 60%', opacity: 0.60 },
     { label: 'D', title: 'Dim: 80%', opacity: 0.80 }
   ];
 

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        all-userscripts-bundle
 // @description Combined bundle of all userscripts in this repo (each sub-script only runs on its original matched sites) — install this instead of individual scripts to keep everything updated in one place
-// @version     0.1100
+// @version     0.1101
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -829,7 +829,7 @@ if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
     { label: 'D', title: 'Dim: OFF', opacity: 0 },
     { label: 'D', title: 'Dim: 20%', opacity: 0.20 },
     { label: 'D', title: 'Dim: 40%', opacity: 0.40 },
-    { label: 'D', title: 'Dim: 60%', opacity: 0.40 },
+    { label: 'D', title: 'Dim: 60%', opacity: 0.60 },
     { label: 'D', title: 'Dim: 80%', opacity: 0.80 }
   ];
 
