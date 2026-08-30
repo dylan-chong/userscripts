@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        dim-mode
 // @description Dim overlay for OLED screens (requires floating-menu script)
-// @version     2.2.1
+// @version     2.3.0
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -15,10 +15,10 @@
   const STORAGE_KEY = 'dim_mode_v1';
   const MODES = [
     { label: 'D', title: 'Dim: OFF', opacity: 0 },
-    { label: 'D', title: 'Dim: 85%', opacity: 0.85 },
-    { label: 'D', title: 'Dim: 70%', opacity: 0.70 },
-    { label: 'D', title: 'Dim: 55%', opacity: 0.55 },
-    { label: 'D', title: 'Dim: 40%', opacity: 0.40 }
+    { label: 'D', title: 'Dim: 20%', opacity: 0.20 },
+    { label: 'D', title: 'Dim: 40%', opacity: 0.40 },
+    { label: 'D', title: 'Dim: 60%', opacity: 0.40 },
+    { label: 'D', title: 'Dim: 80%', opacity: 0.80 }
   ];
 
   let modeIndex = 0;
@@ -63,7 +63,9 @@
   }
 
   function cycleMode() {
+    console.log('cycleMode', modeIndex, MODES[modeIndex]);
     modeIndex = (modeIndex + 1) % MODES.length;
+    console.log('cycleMode', modeIndex, MODES[modeIndex]);
     saveMode();
     applyMode();
   }
