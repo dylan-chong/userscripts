@@ -1,19 +1,27 @@
 // ==UserScript==
-// @name        youtube-time-waste-blocker
-// @description Block or gate YouTube videos based on deny/delay/permit categories
-// @version     2.11
+// @name        time-waste-blocker
+// @description Block or gate time-wasting sites (YouTube, Facebook) based on deny/delay/permit categories
+// @version     1.0
 // @match       *://*.youtube.com/*
-// @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js
-// @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js
+// @match       *://*.facebook.com/*
+// @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/time-waste-blocker.user.js
+// @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/time-waste-blocker.user.js
 // ==/UserScript==
 
 (function () {
   const SUBSCRIPTIONS_URL = 'https://www.youtube.com/feed/subscriptions';
   const MEDITATION_VIDEO_URL = 'https://www.youtube.com/watch?v=MK3lB-uY0gE';
 
-  const CRITERIA = [
+  const YOUTUBE_CRITERIA = [
     { action: 'delay', type: 'channelOrTitle', keywords: ['Naroditsky', 'Loresmith', 'Keyboard'] },
     { action: 'permit', type: 'channelOrTitle', keywords: ['Meditation', 'Singing Bowls', 'ASMR', 'Exercise', 'Breathing', 'Mindfulness', 'Workout', 'Visualisation', 'Visualization', "Mind's Eye"] },
+  ];
+
+  // Messenger URLs on facebook.com (message threads, media attachments) are permitted
+  // so the delay gate only catches the newsfeed/watch/reels time-wasting surfaces.
+  const FACEBOOK_PERMITTED_PATH_PATTERNS = [
+    /^\/messages\//,
+    /^\/messenger_media$/,
   ];
 
   const MEDITATION_DURATION_S = 5 * 60;
@@ -76,15 +84,39 @@
     }
   }
 
-  function getAction(channel, title) {
-    for (var i = 0; i < CRITERIA.length; i++) {
-      if (matchesCriterion(channel, title, CRITERIA[i])) return CRITERIA[i].action;
+  function getYoutubeAction(channel, title) {
+    for (var i = 0; i < YOUTUBE_CRITERIA.length; i++) {
+      if (matchesCriterion(channel, title, YOUTUBE_CRITERIA[i])) return YOUTUBE_CRITERIA[i].action;
     }
     return 'deny';
   }
 
   function isWatchPage() {
     return window.location.pathname === '/watch';
+  }
+
+  function classifyYoutube() {
+    if (!isWatchPage()) return 'permit';
+    var channel = getChannelName();
+    var title = getVideoTitle();
+    if (!channel && !title) return null;
+    return getYoutubeAction(channel, title);
+  }
+
+  function classifyFacebook() {
+    var path = window.location.pathname;
+    var isPermitted = FACEBOOK_PERMITTED_PATH_PATTERNS.some(function (re) { return re.test(path); });
+    return isPermitted ? 'permit' : 'delay';
+  }
+
+  const SITES = [
+    { hostSuffix: 'youtube.com', classify: classifyYoutube, denyUrl: SUBSCRIPTIONS_URL },
+    { hostSuffix: 'facebook.com', classify: classifyFacebook, denyUrl: null },
+  ];
+
+  function getSite() {
+    var hostname = window.location.hostname;
+    return SITES.find(function (site) { return hostname.endsWith(site.hostSuffix); }) || null;
   }
 
   function pauseVideo() {
@@ -243,7 +275,8 @@
   let lastCheckedUrl = '';
 
   setInterval(function () {
-    if (!isWatchPage()) {
+    var site = getSite();
+    if (!site) {
       if (activeOverlay) {
         activeOverlay.remove();
         activeOverlay = null;
@@ -253,20 +286,24 @@
 
     if (window.location.href === lastCheckedUrl) return;
 
-    var channel = getChannelName();
-    var title = getVideoTitle();
-    if (!channel && !title) return;
+    var action = site.classify();
+    if (action == null) return;
 
     lastCheckedUrl = window.location.href;
-    var action = getAction(channel, title);
 
     if (action === 'deny') {
-      window.location.replace(SUBSCRIPTIONS_URL);
-    } else if (action === 'delay' && (Date.now() - lastCompletedAt > COOLDOWN_MS)) {
+      if (site.denyUrl) window.location.replace(site.denyUrl);
+      return;
+    }
+
+    if (action === 'delay' && (Date.now() - lastCompletedAt > COOLDOWN_MS)) {
       pauseVideo();
       if (!activeOverlay) {
         createBreathingOverlay();
       }
+    } else if (activeOverlay) {
+      activeOverlay.remove();
+      activeOverlay = null;
     }
   }, 500);
 })();
