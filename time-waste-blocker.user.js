@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name        time-waste-blocker
-// @description Block or gate time-wasting sites (YouTube, Facebook) based on deny/delay/permit categories
-// @version     1.0
+// @description Block or gate time-wasting sites (YouTube, Facebook, Instagram) based on deny/delay/permit categories
+// @version     1.1
 // @match       *://*.youtube.com/*
 // @match       *://*.facebook.com/*
+// @match       *://*.instagram.com/*
 // @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/time-waste-blocker.user.js
 // @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/time-waste-blocker.user.js
 // ==/UserScript==
@@ -22,6 +23,11 @@
   const FACEBOOK_PERMITTED_PATH_PATTERNS = [
     /^\/messages\//,
     /^\/messenger_media$/,
+  ];
+
+  // Direct message URLs on instagram.com are permitted for the same reason.
+  const INSTAGRAM_PERMITTED_PATH_PATTERNS = [
+    /^\/direct\//,
   ];
 
   const MEDITATION_DURATION_S = 5 * 60;
@@ -103,15 +109,18 @@
     return getYoutubeAction(channel, title);
   }
 
-  function classifyFacebook() {
-    var path = window.location.pathname;
-    var isPermitted = FACEBOOK_PERMITTED_PATH_PATTERNS.some(function (re) { return re.test(path); });
-    return isPermitted ? 'permit' : 'delay';
+  function makePermittedPathClassifier(permittedPathPatterns) {
+    return function () {
+      var path = window.location.pathname;
+      var isPermitted = permittedPathPatterns.some(function (re) { return re.test(path); });
+      return isPermitted ? 'permit' : 'delay';
+    };
   }
 
   const SITES = [
     { hostSuffix: 'youtube.com', classify: classifyYoutube, denyUrl: SUBSCRIPTIONS_URL },
-    { hostSuffix: 'facebook.com', classify: classifyFacebook, denyUrl: null },
+    { hostSuffix: 'facebook.com', classify: makePermittedPathClassifier(FACEBOOK_PERMITTED_PATH_PATTERNS), denyUrl: null },
+    { hostSuffix: 'instagram.com', classify: makePermittedPathClassifier(INSTAGRAM_PERMITTED_PATH_PATTERNS), denyUrl: null },
   ];
 
   function getSite() {

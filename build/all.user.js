@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        all-userscripts-bundle
 // @description Combined bundle of all userscripts in this repo (each sub-script only runs on its original matched sites) — install this instead of individual scripts to keep everything updated in one place
-// @version     0.1106
+// @version     0.1107
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -1824,7 +1824,7 @@ setTimeout(() => {
 
 // time-waste-blocker.user.js
 (function () {
-if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.facebook\.com\/.*$/.test(location.href))) return;
+if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.facebook\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.instagram\.com\/.*$/.test(location.href))) return;
 (function () {
   const SUBSCRIPTIONS_URL = 'https://www.youtube.com/feed/subscriptions';
   const MEDITATION_VIDEO_URL = 'https://www.youtube.com/watch?v=MK3lB-uY0gE';
@@ -1839,6 +1839,11 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.facebo
   const FACEBOOK_PERMITTED_PATH_PATTERNS = [
     /^\/messages\//,
     /^\/messenger_media$/,
+  ];
+
+  // Direct message URLs on instagram.com are permitted for the same reason.
+  const INSTAGRAM_PERMITTED_PATH_PATTERNS = [
+    /^\/direct\//,
   ];
 
   const MEDITATION_DURATION_S = 5 * 60;
@@ -1920,15 +1925,18 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.facebo
     return getYoutubeAction(channel, title);
   }
 
-  function classifyFacebook() {
-    var path = window.location.pathname;
-    var isPermitted = FACEBOOK_PERMITTED_PATH_PATTERNS.some(function (re) { return re.test(path); });
-    return isPermitted ? 'permit' : 'delay';
+  function makePermittedPathClassifier(permittedPathPatterns) {
+    return function () {
+      var path = window.location.pathname;
+      var isPermitted = permittedPathPatterns.some(function (re) { return re.test(path); });
+      return isPermitted ? 'permit' : 'delay';
+    };
   }
 
   const SITES = [
     { hostSuffix: 'youtube.com', classify: classifyYoutube, denyUrl: SUBSCRIPTIONS_URL },
-    { hostSuffix: 'facebook.com', classify: classifyFacebook, denyUrl: null },
+    { hostSuffix: 'facebook.com', classify: makePermittedPathClassifier(FACEBOOK_PERMITTED_PATH_PATTERNS), denyUrl: null },
+    { hostSuffix: 'instagram.com', classify: makePermittedPathClassifier(INSTAGRAM_PERMITTED_PATH_PATTERNS), denyUrl: null },
   ];
 
   function getSite() {
