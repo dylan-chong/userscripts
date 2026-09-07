@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        all-userscripts-bundle
 // @description Combined bundle of all userscripts in this repo (each sub-script only runs on its original matched sites) — install this instead of individual scripts to keep everything updated in one place
-// @version     0.1103
+// @version     0.1105
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -1038,9 +1038,9 @@ if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
     // runs, so dark-brown/dark-blue-vs-black differences still produce a detectable edge.
     // lineRadius is the feMorphology dilate radius controlling rendered edge line thickness.
     // dim is the brightness slope applied to the original image before blending it under the edges.
-    { id: 'night-video-1', gamma: 0.35, lineRadius: 2, dim: 0 },
-    { id: 'night-video-2', gamma: 0.35, lineRadius: 3, dim: 0.1 },
-    { id: 'night-video-3', gamma: 0.35, lineRadius: 4, dim: 0.2 },
+    { id: 'night-video-1', gamma: 0.35, lineRadius: 2, dim: 0.1 },
+    { id: 'night-video-2', gamma: 0.5, lineRadius: 2, dim: 0.1 },
+    { id: 'night-video-3', gamma: 0.5, lineRadius: 2, dim: 0.2 },
   ];
 
   function filterTitle(filter) {
@@ -1057,13 +1057,13 @@ if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
     try {
       var stored = parseInt(localStorage.getItem(STORAGE_KEY), 10);
       filterIndex = isNaN(stored) || stored < 0 || stored >= FILTERS.length ? 0 : stored;
-    } catch (e) {}
+    } catch (e) { }
   }
 
   function saveState() {
     try {
       localStorage.setItem(STORAGE_KEY, String(filterIndex));
-    } catch (e) {}
+    } catch (e) { }
   }
 
   function ensureSvgFilter() {
@@ -2321,7 +2321,7 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href))) return;
   const MEDITATION_VIDEO_URL = 'https://www.youtube.com/watch?v=MK3lB-uY0gE';
 
   const CRITERIA = [
-    { action: 'delay', type: 'channelOrTitle', keywords: ['Naroditsky', 'Knights', 'Chess', 'Loresmith', 'Keyboard'] },
+    { action: 'delay', type: 'channelOrTitle', keywords: ['Naroditsky', 'Loresmith', 'Keyboard'] },
     { action: 'permit', type: 'channelOrTitle', keywords: ['Meditation', 'Singing Bowls', 'ASMR', 'Exercise', 'Breathing', 'Mindfulness', 'Workout', 'Visualisation', 'Visualization', "Mind's Eye"] },
   ];
 
@@ -2332,7 +2332,7 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href))) return;
     { name: 'Simple Breathing', steps: [['Breathe in', 6], ['Breathe out', 6]] },
   ];
 
-  const COOLDOWN_MS = 60 * 60 * 1000;
+  const COOLDOWN_MS = 45 * 60 * 1000;
   const COOLDOWN_STORAGE_KEY = 'yt-time-waste-blocker-last-completed';
   let lastCompletedAt = parseInt(localStorage.getItem(COOLDOWN_STORAGE_KEY)) || 0;
   let activeOverlay = null;

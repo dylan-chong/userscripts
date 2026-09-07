@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        youtube-time-waste-blocker
 // @description Block or gate YouTube videos based on deny/delay/permit categories
-// @version     2.10
+// @version     2.11
 // @match       *://*.youtube.com/*
 // @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js
 // @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-time-waste-blocker.user.js
@@ -12,7 +12,7 @@
   const MEDITATION_VIDEO_URL = 'https://www.youtube.com/watch?v=MK3lB-uY0gE';
 
   const CRITERIA = [
-    { action: 'delay', type: 'channelOrTitle', keywords: ['Naroditsky', 'Knights', 'Chess', 'Loresmith', 'Keyboard'] },
+    { action: 'delay', type: 'channelOrTitle', keywords: ['Naroditsky', 'Loresmith', 'Keyboard'] },
     { action: 'permit', type: 'channelOrTitle', keywords: ['Meditation', 'Singing Bowls', 'ASMR', 'Exercise', 'Breathing', 'Mindfulness', 'Workout', 'Visualisation', 'Visualization', "Mind's Eye"] },
   ];
 
@@ -23,7 +23,7 @@
     { name: 'Simple Breathing', steps: [['Breathe in', 6], ['Breathe out', 6]] },
   ];
 
-  const COOLDOWN_MS = 60 * 60 * 1000;
+  const COOLDOWN_MS = 45 * 60 * 1000;
   const COOLDOWN_STORAGE_KEY = 'yt-time-waste-blocker-last-completed';
   let lastCompletedAt = parseInt(localStorage.getItem(COOLDOWN_STORAGE_KEY)) || 0;
   let activeOverlay = null;

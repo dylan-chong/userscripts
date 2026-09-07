@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        night-video
 // @description Fullscreen edge-detection filter for OLED night viewing (requires floating-menu script)
-// @version     1.10.0
+// @version     1.11.0
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -20,9 +20,9 @@
     // runs, so dark-brown/dark-blue-vs-black differences still produce a detectable edge.
     // lineRadius is the feMorphology dilate radius controlling rendered edge line thickness.
     // dim is the brightness slope applied to the original image before blending it under the edges.
-    { id: 'night-video-1', gamma: 0.35, lineRadius: 2, dim: 0 },
-    { id: 'night-video-2', gamma: 0.35, lineRadius: 3, dim: 0.1 },
-    { id: 'night-video-3', gamma: 0.35, lineRadius: 4, dim: 0.2 },
+    { id: 'night-video-1', gamma: 0.35, lineRadius: 2, dim: 0.1 },
+    { id: 'night-video-2', gamma: 0.5, lineRadius: 2, dim: 0.1 },
+    { id: 'night-video-3', gamma: 0.5, lineRadius: 2, dim: 0.2 },
   ];
 
   function filterTitle(filter) {
@@ -39,13 +39,13 @@
     try {
       var stored = parseInt(localStorage.getItem(STORAGE_KEY), 10);
       filterIndex = isNaN(stored) || stored < 0 || stored >= FILTERS.length ? 0 : stored;
-    } catch (e) {}
+    } catch (e) { }
   }
 
   function saveState() {
     try {
       localStorage.setItem(STORAGE_KEY, String(filterIndex));
-    } catch (e) {}
+    } catch (e) { }
   }
 
   function ensureSvgFilter() {
