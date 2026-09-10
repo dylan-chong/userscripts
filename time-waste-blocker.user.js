@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        time-waste-blocker
 // @description Block or gate time-wasting sites (YouTube, Facebook, Instagram) based on deny/delay/permit categories
-// @version     1.1
+// @version     1.2
 // @match       *://*.youtube.com/*
 // @match       *://*.facebook.com/*
 // @match       *://*.instagram.com/*
@@ -161,12 +161,6 @@
     var progress = document.createElement('div');
     progress.style.cssText = 'font-size:1rem;opacity:0.5;margin-bottom:2rem;';
     overlay.appendChild(progress);
-
-    var meditationLink = document.createElement('a');
-    meditationLink.href = MEDITATION_VIDEO_URL;
-    meditationLink.textContent = 'Or meditate with singing bowls instead';
-    meditationLink.style.cssText = 'color:rgba(255,255,255,0.5);font-size:0.9rem;text-decoration:underline;cursor:pointer;';
-    overlay.appendChild(meditationLink);
 
     document.body.appendChild(overlay);
     activeOverlay = overlay;

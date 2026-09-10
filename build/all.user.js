@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        all-userscripts-bundle
 // @description Combined bundle of all userscripts in this repo (each sub-script only runs on its original matched sites) — install this instead of individual scripts to keep everything updated in one place
-// @version     0.1107
+// @version     0.1108
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -1977,12 +1977,6 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.facebo
     var progress = document.createElement('div');
     progress.style.cssText = 'font-size:1rem;opacity:0.5;margin-bottom:2rem;';
     overlay.appendChild(progress);
-
-    var meditationLink = document.createElement('a');
-    meditationLink.href = MEDITATION_VIDEO_URL;
-    meditationLink.textContent = 'Or meditate with singing bowls instead';
-    meditationLink.style.cssText = 'color:rgba(255,255,255,0.5);font-size:0.9rem;text-decoration:underline;cursor:pointer;';
-    overlay.appendChild(meditationLink);
 
     document.body.appendChild(overlay);
     activeOverlay = overlay;
