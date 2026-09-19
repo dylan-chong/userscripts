@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        all-userscripts-bundle
 // @description Combined bundle of all userscripts in this repo (each sub-script only runs on its original matched sites) — install this instead of individual scripts to keep everything updated in one place
-// @version     0.1113
+// @version     0.1114
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -1889,7 +1889,6 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.facebo
   }
 
   let lastCompletedAt = 0;
-  readCooldown().then(function (v) { lastCompletedAt = v; });
   let activeOverlay = null;
 
   function queryFirst(...selectors) {
@@ -2150,17 +2149,21 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.facebo
     }
 
     // Re-read in case another tab/origin completed the meditation and updated storage.
-    readCooldown().then(function (v) { lastCompletedAt = v; });
+    // Must await this value directly (not a stale cached one) before deciding to gate,
+    // otherwise every check briefly sees the previous poll's value and can false-trigger.
+    readCooldown().then(function (v) {
+      lastCompletedAt = v;
 
-    if (action === 'delay' && (Date.now() - lastCompletedAt > COOLDOWN_MS)) {
-      pauseVideo();
-      if (!activeOverlay) {
-        createBreathingOverlay();
+      if (action === 'delay' && (Date.now() - lastCompletedAt > COOLDOWN_MS)) {
+        pauseVideo();
+        if (!activeOverlay) {
+          createBreathingOverlay();
+        }
+      } else if (activeOverlay) {
+        activeOverlay.remove();
+        activeOverlay = null;
       }
-    } else if (activeOverlay) {
-      activeOverlay.remove();
-      activeOverlay = null;
-    }
+    });
   }
 
   // Single 1s poll: detects SPA navigation (no popstate on these sites) and
