@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        time-waste-blocker
 // @description Block or gate time-wasting sites (YouTube, Facebook, Instagram) based on deny/delay/permit categories
-// @version     1.3
+// @version     1.4
 // @match       *://*.youtube.com/*
 // @match       *://*.facebook.com/*
 // @match       *://*.instagram.com/*
@@ -314,12 +314,10 @@
   }
 
   const ACTIVE_CHECK_WINDOW_MS = 30 * 1000;
-  const ACTIVE_CHECK_INTERVAL_MS = 1000;
-  const URL_WATCH_INTERVAL_MS = 500;
+  const CHECK_INTERVAL_MS = 1000;
 
   let lastCheckedUrl = '';
   let activeWindowEndsAt = 0;
-  let activeCheckIntervalId = null;
 
   function runCheck() {
     var site = getSite();
@@ -353,29 +351,21 @@
     }
   }
 
-  function startActiveCheckWindow() {
-    activeWindowEndsAt = Date.now() + ACTIVE_CHECK_WINDOW_MS;
-    if (activeCheckIntervalId) return;
-
-    activeCheckIntervalId = setInterval(function () {
-      runCheck();
-      if (Date.now() >= activeWindowEndsAt) {
-        clearInterval(activeCheckIntervalId);
-        activeCheckIntervalId = null;
-      }
-    }, ACTIVE_CHECK_INTERVAL_MS);
-  }
-
-  // Cheap watcher: SPA navigation on these sites doesn't fire popstate, so we
-  // poll the URL to detect changes and (re)start the 30s active-check window.
+  // Single 1s poll: detects SPA navigation (no popstate on these sites) and
+  // keeps checking for a 30s window afterwards to catch delayed page loads.
   setInterval(function () {
-    if (window.location.href === lastCheckedUrl) return;
-    lastCheckedUrl = window.location.href;
-    runCheck();
-    startActiveCheckWindow();
-  }, URL_WATCH_INTERVAL_MS);
+    var urlChanged = window.location.href !== lastCheckedUrl;
+    if (urlChanged) {
+      lastCheckedUrl = window.location.href;
+      activeWindowEndsAt = Date.now() + ACTIVE_CHECK_WINDOW_MS;
+    }
+    if (urlChanged || Date.now() < activeWindowEndsAt) {
+      runCheck();
+    }
+  }, CHECK_INTERVAL_MS);
 
   // Initial page load.
+  lastCheckedUrl = window.location.href;
+  activeWindowEndsAt = Date.now() + ACTIVE_CHECK_WINDOW_MS;
   runCheck();
-  startActiveCheckWindow();
 })();
