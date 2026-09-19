@@ -1,14 +1,10 @@
 // ==UserScript==
 // @name        time-waste-blocker
 // @description Block or gate time-wasting sites (YouTube, Facebook, Instagram) based on deny/delay/permit categories
-// @version     1.5
+// @version     1.7
 // @match       *://*.youtube.com/*
 // @match       *://*.facebook.com/*
 // @match       *://*.instagram.com/*
-// @grant       GM_getValue
-// @grant       GM_setValue
-// @grant       GM.getValue
-// @grant       GM.setValue
 // @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/time-waste-blocker.user.js
 // @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/time-waste-blocker.user.js
 // ==/UserScript==
@@ -44,36 +40,45 @@
   const COOLDOWN_MS = 45 * 60 * 1000;
   const COOLDOWN_STORAGE_KEY = 'yt-time-waste-blocker-last-completed';
 
-  // Cross-hostname storage (e.g. www.facebook.com vs m.facebook.com don't share
-  // localStorage). GM storage is keyed by script identity, not page origin, and
-  // works under both Tampermonkey (sync GM_*) and Safari Userscripts (async GM.*).
-  function readCooldown() {
-    try {
-      if (typeof GM !== 'undefined' && GM.getValue) {
-        return Promise.resolve(GM.getValue(COOLDOWN_STORAGE_KEY)).then(function (v) {
-          return parseInt(v) || 0;
-        });
-      }
-      if (typeof GM_getValue === 'function') {
-        return Promise.resolve(parseInt(GM_getValue(COOLDOWN_STORAGE_KEY)) || 0);
-      }
-    } catch (e) {
-      // GM API not actually available despite existing; fall through.
+  // IndexedDB survives Facebook's random localStorage.clear() calls, unlike localStorage.
+  const IDB_NAME = 'time-waste-blocker-db';
+  const IDB_STORE = 'kv';
+  let dbPromise = null;
+
+  function openDb() {
+    if (!dbPromise) {
+      dbPromise = new Promise(function (resolve, reject) {
+        var req = indexedDB.open(IDB_NAME, 1);
+        req.onupgradeneeded = function () {
+          req.result.createObjectStore(IDB_STORE);
+        };
+        req.onsuccess = function () { resolve(req.result); };
+        req.onerror = function () { reject(req.error); };
+      });
     }
-    return Promise.resolve(parseInt(localStorage.getItem(COOLDOWN_STORAGE_KEY)) || 0);
+    return dbPromise;
+  }
+
+  function readCooldown() {
+    return openDb().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction(IDB_STORE, 'readonly');
+        var req = tx.objectStore(IDB_STORE).get(COOLDOWN_STORAGE_KEY);
+        req.onsuccess = function () { resolve(parseInt(req.result) || 0); };
+        req.onerror = function () { reject(req.error); };
+      });
+    }).catch(function () {
+      return 0;
+    });
   }
 
   function writeCooldown(value) {
-    try {
-      if (typeof GM !== 'undefined' && GM.setValue) {
-        GM.setValue(COOLDOWN_STORAGE_KEY, value);
-      } else if (typeof GM_setValue === 'function') {
-        GM_setValue(COOLDOWN_STORAGE_KEY, value);
-      }
-    } catch (e) {
-      // Ignore; localStorage write below still happens.
-    }
-    localStorage.setItem(COOLDOWN_STORAGE_KEY, String(value));
+    openDb().then(function (db) {
+      var tx = db.transaction(IDB_STORE, 'readwrite');
+      tx.objectStore(IDB_STORE).put(value, COOLDOWN_STORAGE_KEY);
+    }).catch(function () {
+      // Ignore; nothing else to fall back to.
+    });
   }
 
   let lastCompletedAt = 0;
