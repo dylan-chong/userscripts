@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        all-userscripts-bundle
 // @description Combined bundle of all userscripts in this repo (each sub-script only runs on its original matched sites) — install this instead of individual scripts to keep everything updated in one place
-// @version     0.1118
+// @version     0.1119
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -1996,6 +1996,11 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.facebo
     if (video) video.play();
   }
 
+  // Both the breathing exercise and the post-exercise countdown drive their per-second
+  // progress off the single main poll interval below, instead of owning their own timers.
+  let breathing = null;
+  let completion = null;
+
   function createBreathingOverlay() {
     var pattern = BREATHING_PATTERNS[Math.floor(Math.random() * BREATHING_PATTERNS.length)];
 
@@ -2023,7 +2028,18 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.facebo
     document.body.appendChild(overlay);
     activeOverlay = overlay;
 
-    runBreathingExercise(pattern, circle, instruction, progress, overlay);
+    breathing = {
+      pattern: pattern,
+      cycles: calculateCycles(pattern),
+      currentCycle: 0,
+      currentStep: 0,
+      secondsLeft: pattern2.steps[0][1],
+      circle: circle,
+      instruction: instruction,
+      progress: progress,
+      overlay: overlay,
+    };
+    updateBreathingDisplay(breathing);
   }
 
   function calculateCycles(pattern) {
@@ -2034,69 +2050,48 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.facebo
     return Math.ceil(cycles);
   }
 
-  function runBreathingExercise(pattern, circle, instruction, progress, overlay) {
-    var currentCycle = 0;
-    var cycles = calculateCycles(pattern);
-    var currentStep = 0;
-    var secondsLeft = pattern.steps[0][1];
-    var paused = false;
+  function updateBreathingDisplay(b) {
+    var stepName = b.pattern.steps[b.currentStep][0];
+    var stepDuration = b.pattern.steps[b.currentStep][1];
+    b.instruction.textContent = stepName + '...';
+    b.progress.textContent = 'Cycle ' + (b.currentCycle + 1) + ' of ' + b.cycles + '  •  ' + b.secondsLeft + 's';
 
-    function updateDisplay() {
-      var stepName = pattern.steps[currentStep][0];
-      var stepDuration = pattern.steps[currentStep][1];
-      instruction.textContent = stepName + '...';
-      progress.textContent = 'Cycle ' + (currentCycle + 1) + ' of ' + cycles + '  •  ' + secondsLeft + 's';
-
-      var scale = 1;
-      var elapsed = stepDuration - secondsLeft;
-      var t = elapsed / stepDuration;
-      if (stepName === 'Breathe in') {
-        scale = 1 + t * 0.5;
-      } else if (stepName === 'Breathe out') {
-        scale = 1.5 - t * 0.5;
-      } else {
-        scale = stepName === 'Hold' && currentStep > 0 && pattern.steps[currentStep - 1][0] === 'Breathe in' ? 1.5 : 1;
-      }
-      circle.style.transform = 'scale(' + scale + ')';
+    var scale = 1;
+    var elapsed = stepDuration - b.secondsLeft;
+    var t = elapsed / stepDuration;
+    if (stepName === 'Breathe in') {
+      scale = 1 + t * 0.5;
+    } else if (stepName === 'Breathe out') {
+      scale = 1.5 - t * 0.5;
+    } else {
+      scale = stepName === 'Hold' && b.currentStep > 0 && b.pattern.steps[b.currentStep - 1][0] === 'Breathe in' ? 1.5 : 1;
     }
+    b.circle.style.transform = 'scale(' + scale + ')';
+  }
 
-    function tick() {
-      if (paused) return;
+  function tickBreathing() {
+    if (document.hidden) return;
+    pauseVideo();
 
-      secondsLeft--;
-      if (secondsLeft <= 0) {
-        currentStep++;
-        if (currentStep >= pattern.steps.length) {
-          currentStep = 0;
-          currentCycle++;
-          if (currentCycle >= cycles) {
-            completeExercise(overlay);
-            return;
-          }
+    var b = breathing;
+    b.secondsLeft--;
+    if (b.secondsLeft <= 0) {
+      b.currentStep++;
+      if (b.currentStep >= b.pattern.steps.length) {
+        b.currentStep = 0;
+        b.currentCycle++;
+        if (b.currentCycle >= b.cycles) {
+          completeExercise(b.overlay);
+          return;
         }
-        secondsLeft = pattern.steps[currentStep][1];
       }
-      updateDisplay();
+      b.secondsLeft = b.pattern.steps[b.currentStep][1];
     }
-
-    document.addEventListener('visibilitychange', function handler() {
-      if (!document.body.contains(overlay)) {
-        document.removeEventListener('visibilitychange', handler);
-        return;
-      }
-      paused = document.hidden;
-    });
-
-    updateDisplay();
-    var intervalId = setInterval(function () {
-      pauseVideo();
-      tick();
-    }, 1000);
-    overlay._breathingIntervalId = intervalId;
+    updateBreathingDisplay(b);
   }
 
   function completeExercise(overlay) {
-    if (overlay._breathingIntervalId) clearInterval(overlay._breathingIntervalId);
+    breathing = null;
     while (overlay.firstChild) overlay.removeChild(overlay.firstChild);
     overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;color:#fff;';
 
@@ -2118,18 +2113,21 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.facebo
     var remaining = 15;
     countdown.textContent = 'Video available in ' + remaining + 's';
 
-    var timer = setInterval(function () {
-      remaining--;
-      if (remaining <= 0) {
-        clearInterval(timer);
-        writeCooldown(Date.now());
-        overlay.remove();
-        activeOverlay = null;
-        playVideo();
-      } else {
-        countdown.textContent = 'Video available in ' + remaining + 's';
-      }
-    }, 1000);
+    completion = { overlay: overlay, remaining: remaining, countdown: countdown };
+  }
+
+  function tickCompletion() {
+    var c = completion;
+    c.remaining--;
+    if (c.remaining <= 0) {
+      completion = null;
+      writeCooldown(Date.now());
+      c.overlay.remove();
+      activeOverlay = null;
+      playVideo();
+    } else {
+      c.countdown.textContent = 'Video available in ' + c.remaining + 's';
+    }
   }
 
   const ACTIVE_CHECK_WINDOW_MS = 30 * 1000;
@@ -2171,9 +2169,30 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.facebo
     }
   }
 
-  // Single 1s poll: detects SPA navigation (no popstate on these sites) and
-  // keeps checking for a 30s window afterwards to catch delayed page loads.
+  // Single 1s poll drives everything: SPA navigation detection (no popstate on these
+  // sites, with a 30s active window afterwards to catch delayed page loads), the
+  // breathing exercise countdown, and the post-exercise "video available in Ns" countdown.
   setInterval(function () {
+    if (breathing || completion) {
+      // Bail out of the exercise/countdown if the user navigated away from a gated
+      // site entirely (e.g. via the address bar), instead of leaving them stuck.
+      if (!getSite()) {
+        breathing = null;
+        completion = null;
+        if (activeOverlay) {
+          activeOverlay.remove();
+          activeOverlay = null;
+        }
+        return;
+      }
+      if (breathing) {
+        tickBreathing();
+      } else {
+        tickCompletion();
+      }
+      return;
+    }
+
     var urlChanged = window.location.href !== lastCheckedUrl;
     if (urlChanged) {
       lastCheckedUrl = window.location.href;
