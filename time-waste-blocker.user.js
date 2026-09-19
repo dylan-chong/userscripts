@@ -162,12 +162,6 @@
     progress.style.cssText = 'font-size:1rem;opacity:0.5;margin-bottom:2rem;';
     overlay.appendChild(progress);
 
-    var meditationLink = document.createElement('a');
-    meditationLink.href = MEDITATION_VIDEO_URL;
-    meditationLink.textContent = 'Or meditate with singing bowls instead';
-    meditationLink.style.cssText = 'color:rgba(255,255,255,0.5);font-size:0.9rem;text-decoration:underline;cursor:pointer;';
-    overlay.appendChild(meditationLink);
-
     document.body.appendChild(overlay);
     activeOverlay = overlay;
 
