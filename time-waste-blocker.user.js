@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        time-waste-blocker
 // @description Block or gate time-wasting sites (YouTube, Facebook, Instagram) based on deny/delay/permit categories
-// @version     1.8
+// @version     1.9
 // @match       *://*.youtube.com/*
 // @match       *://*.facebook.com/*
 // @match       *://*.instagram.com/*
@@ -82,7 +82,6 @@
     }
   }
 
-  let lastCompletedAt = 0;
   let activeOverlay = null;
 
   function queryFirst(...selectors) {
@@ -307,8 +306,7 @@
       remaining--;
       if (remaining <= 0) {
         clearInterval(timer);
-        lastCompletedAt = Date.now();
-        writeCooldown(lastCompletedAt);
+        writeCooldown(Date.now());
         overlay.remove();
         activeOverlay = null;
         playVideo();
@@ -342,10 +340,9 @@
       return;
     }
 
-    // Re-read in case another tab/origin completed the meditation and updated storage.
-    // Must await this value directly (not a stale cached one) before deciding to gate,
-    // otherwise every check briefly sees the previous poll's value and can false-trigger.
-    lastCompletedAt = await readCooldown();
+    // Re-read every time (not a cached variable) in case another tab/origin completed
+    // the meditation and updated storage, or a previous poll's value went stale.
+    var lastCompletedAt = await readCooldown();
 
     if (action === 'delay' && (Date.now() - lastCompletedAt > COOLDOWN_MS)) {
       pauseVideo();

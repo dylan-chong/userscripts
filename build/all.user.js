@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        all-userscripts-bundle
 // @description Combined bundle of all userscripts in this repo (each sub-script only runs on its original matched sites) — install this instead of individual scripts to keep everything updated in one place
-// @version     0.1117
+// @version     0.1118
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -1898,7 +1898,6 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.facebo
     }
   }
 
-  let lastCompletedAt = 0;
   let activeOverlay = null;
 
   function queryFirst(...selectors) {
@@ -2123,8 +2122,7 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.facebo
       remaining--;
       if (remaining <= 0) {
         clearInterval(timer);
-        lastCompletedAt = Date.now();
-        writeCooldown(lastCompletedAt);
+        writeCooldown(Date.now());
         overlay.remove();
         activeOverlay = null;
         playVideo();
@@ -2158,10 +2156,9 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.facebo
       return;
     }
 
-    // Re-read in case another tab/origin completed the meditation and updated storage.
-    // Must await this value directly (not a stale cached one) before deciding to gate,
-    // otherwise every check briefly sees the previous poll's value and can false-trigger.
-    lastCompletedAt = await readCooldown();
+    // Re-read every time (not a cached variable) in case another tab/origin completed
+    // the meditation and updated storage, or a previous poll's value went stale.
+    var lastCompletedAt = await readCooldown();
 
     if (action === 'delay' && (Date.now() - lastCompletedAt > COOLDOWN_MS)) {
       pauseVideo();
