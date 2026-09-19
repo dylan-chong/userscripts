@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        time-waste-blocker
 // @description Block or gate time-wasting sites (YouTube, Facebook, Instagram) based on deny/delay/permit categories
-// @version     1.7
+// @version     1.8
 // @match       *://*.youtube.com/*
 // @match       *://*.facebook.com/*
 // @match       *://*.instagram.com/*
@@ -59,26 +59,27 @@
     return dbPromise;
   }
 
-  function readCooldown() {
-    return openDb().then(function (db) {
-      return new Promise(function (resolve, reject) {
+  async function readCooldown() {
+    try {
+      var db = await openDb();
+      return await new Promise(function (resolve, reject) {
         var tx = db.transaction(IDB_STORE, 'readonly');
         var req = tx.objectStore(IDB_STORE).get(COOLDOWN_STORAGE_KEY);
         req.onsuccess = function () { resolve(parseInt(req.result) || 0); };
         req.onerror = function () { reject(req.error); };
       });
-    }).catch(function () {
+    } catch (e) {
       return 0;
-    });
+    }
   }
 
-  function writeCooldown(value) {
-    openDb().then(function (db) {
-      var tx = db.transaction(IDB_STORE, 'readwrite');
-      tx.objectStore(IDB_STORE).put(value, COOLDOWN_STORAGE_KEY);
-    }).catch(function () {
+  async function writeCooldown(value) {
+    try {
+      var db = await openDb();
+      db.transaction(IDB_STORE, 'readwrite').objectStore(IDB_STORE).put(value, COOLDOWN_STORAGE_KEY);
+    } catch (e) {
       // Ignore; nothing else to fall back to.
-    });
+    }
   }
 
   let lastCompletedAt = 0;
@@ -323,7 +324,7 @@
   let lastCheckedUrl = '';
   let activeWindowEndsAt = 0;
 
-  function runCheck() {
+  async function runCheck() {
     var site = getSite();
     if (!site) {
       if (activeOverlay) {
@@ -344,19 +345,17 @@
     // Re-read in case another tab/origin completed the meditation and updated storage.
     // Must await this value directly (not a stale cached one) before deciding to gate,
     // otherwise every check briefly sees the previous poll's value and can false-trigger.
-    readCooldown().then(function (v) {
-      lastCompletedAt = v;
+    lastCompletedAt = await readCooldown();
 
-      if (action === 'delay' && (Date.now() - lastCompletedAt > COOLDOWN_MS)) {
-        pauseVideo();
-        if (!activeOverlay) {
-          createBreathingOverlay();
-        }
-      } else if (activeOverlay) {
-        activeOverlay.remove();
-        activeOverlay = null;
+    if (action === 'delay' && (Date.now() - lastCompletedAt > COOLDOWN_MS)) {
+      pauseVideo();
+      if (!activeOverlay) {
+        createBreathingOverlay();
       }
-    });
+    } else if (activeOverlay) {
+      activeOverlay.remove();
+      activeOverlay = null;
+    }
   }
 
   // Single 1s poll: detects SPA navigation (no popstate on these sites) and
