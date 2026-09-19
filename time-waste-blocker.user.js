@@ -1,10 +1,14 @@
 // ==UserScript==
 // @name        time-waste-blocker
 // @description Block or gate time-wasting sites (YouTube, Facebook, Instagram) based on deny/delay/permit categories
-// @version     1.2
+// @version     1.3
 // @match       *://*.youtube.com/*
 // @match       *://*.facebook.com/*
 // @match       *://*.instagram.com/*
+// @grant       GM_getValue
+// @grant       GM_setValue
+// @grant       GM.getValue
+// @grant       GM.setValue
 // @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/time-waste-blocker.user.js
 // @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/time-waste-blocker.user.js
 // ==/UserScript==
@@ -39,7 +43,41 @@
 
   const COOLDOWN_MS = 45 * 60 * 1000;
   const COOLDOWN_STORAGE_KEY = 'yt-time-waste-blocker-last-completed';
-  let lastCompletedAt = parseInt(localStorage.getItem(COOLDOWN_STORAGE_KEY)) || 0;
+
+  // Cross-hostname storage (e.g. www.facebook.com vs m.facebook.com don't share
+  // localStorage). GM storage is keyed by script identity, not page origin, and
+  // works under both Tampermonkey (sync GM_*) and Safari Userscripts (async GM.*).
+  function readCooldown() {
+    try {
+      if (typeof GM !== 'undefined' && GM.getValue) {
+        return Promise.resolve(GM.getValue(COOLDOWN_STORAGE_KEY)).then(function (v) {
+          return parseInt(v) || 0;
+        });
+      }
+      if (typeof GM_getValue === 'function') {
+        return Promise.resolve(parseInt(GM_getValue(COOLDOWN_STORAGE_KEY)) || 0);
+      }
+    } catch (e) {
+      // GM API not actually available despite existing; fall through.
+    }
+    return Promise.resolve(parseInt(localStorage.getItem(COOLDOWN_STORAGE_KEY)) || 0);
+  }
+
+  function writeCooldown(value) {
+    try {
+      if (typeof GM !== 'undefined' && GM.setValue) {
+        GM.setValue(COOLDOWN_STORAGE_KEY, value);
+      } else if (typeof GM_setValue === 'function') {
+        GM_setValue(COOLDOWN_STORAGE_KEY, value);
+      }
+    } catch (e) {
+      // Ignore; localStorage write below still happens.
+    }
+    localStorage.setItem(COOLDOWN_STORAGE_KEY, String(value));
+  }
+
+  let lastCompletedAt = 0;
+  readCooldown().then(function (v) { lastCompletedAt = v; });
   let activeOverlay = null;
 
   function queryFirst(...selectors) {
@@ -265,7 +303,7 @@
       if (remaining <= 0) {
         clearInterval(timer);
         lastCompletedAt = Date.now();
-        localStorage.setItem(COOLDOWN_STORAGE_KEY, String(lastCompletedAt));
+        writeCooldown(lastCompletedAt);
         overlay.remove();
         activeOverlay = null;
         playVideo();
@@ -301,8 +339,8 @@
       return;
     }
 
-    // Re-read in case another tab completed the meditation and updated storage.
-    lastCompletedAt = parseInt(localStorage.getItem(COOLDOWN_STORAGE_KEY)) || 0;
+    // Re-read in case another tab/origin completed the meditation and updated storage.
+    readCooldown().then(function (v) { lastCompletedAt = v; });
 
     if (action === 'delay' && (Date.now() - lastCompletedAt > COOLDOWN_MS)) {
       pauseVideo();
