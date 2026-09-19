@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        time-waste-blocker
 // @description Block or gate time-wasting sites (YouTube, Facebook, Instagram) based on deny/delay/permit categories
-// @version     1.1
+// @version     1.2
 // @match       *://*.youtube.com/*
 // @match       *://*.facebook.com/*
 // @match       *://*.instagram.com/*
@@ -281,9 +281,15 @@
     }, 1000);
   }
 
-  let lastCheckedUrl = '';
+  const ACTIVE_CHECK_WINDOW_MS = 30 * 1000;
+  const ACTIVE_CHECK_INTERVAL_MS = 1000;
+  const URL_WATCH_INTERVAL_MS = 500;
 
-  setInterval(function () {
+  let lastCheckedUrl = '';
+  let activeWindowEndsAt = 0;
+  let activeCheckIntervalId = null;
+
+  function runCheck() {
     var site = getSite();
     if (!site) {
       if (activeOverlay) {
@@ -293,17 +299,16 @@
       return;
     }
 
-    if (window.location.href === lastCheckedUrl) return;
-
     var action = site.classify();
     if (action == null) return;
-
-    lastCheckedUrl = window.location.href;
 
     if (action === 'deny') {
       if (site.denyUrl) window.location.replace(site.denyUrl);
       return;
     }
+
+    // Re-read in case another tab completed the meditation and updated storage.
+    lastCompletedAt = parseInt(localStorage.getItem(COOLDOWN_STORAGE_KEY)) || 0;
 
     if (action === 'delay' && (Date.now() - lastCompletedAt > COOLDOWN_MS)) {
       pauseVideo();
@@ -314,5 +319,31 @@
       activeOverlay.remove();
       activeOverlay = null;
     }
-  }, 500);
+  }
+
+  function startActiveCheckWindow() {
+    activeWindowEndsAt = Date.now() + ACTIVE_CHECK_WINDOW_MS;
+    if (activeCheckIntervalId) return;
+
+    activeCheckIntervalId = setInterval(function () {
+      runCheck();
+      if (Date.now() >= activeWindowEndsAt) {
+        clearInterval(activeCheckIntervalId);
+        activeCheckIntervalId = null;
+      }
+    }, ACTIVE_CHECK_INTERVAL_MS);
+  }
+
+  // Cheap watcher: SPA navigation on these sites doesn't fire popstate, so we
+  // poll the URL to detect changes and (re)start the 30s active-check window.
+  setInterval(function () {
+    if (window.location.href === lastCheckedUrl) return;
+    lastCheckedUrl = window.location.href;
+    runCheck();
+    startActiveCheckWindow();
+  }, URL_WATCH_INTERVAL_MS);
+
+  // Initial page load.
+  runCheck();
+  startActiveCheckWindow();
 })();
