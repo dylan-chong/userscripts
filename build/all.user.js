@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        all-userscripts-bundle
 // @description Combined bundle of all userscripts in this repo (each sub-script only runs on its original matched sites) — install this instead of individual scripts to keep everything updated in one place
-// @version     0.1120
+// @version     0.1124
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -784,19 +784,28 @@ if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
     darkModeButton.title = getDarkModeTitle(darkModeState);
   }
 
+  let lastAppliedState = null;
+
   function checkAndApplyDarkMode() {
     const darkModeState = getSettings().darkModeState;
+    let isDark;
     if (darkModeState === 'on') {
-      applyDarkMode(true);
+      isDark = true;
     } else if (darkModeState === 'off') {
-      removeDarkMode();
+      isDark = false;
     } else {
-      const alreadyDark = isPageDark();
-      if (alreadyDark) {
-        removeDarkMode();
-      } else {
-        applyDarkMode(true);
-      }
+      isDark = !isPageDark();
+    }
+
+    if (darkModeState === lastAppliedState && isDark === isDarkModeActive()) {
+      return;
+    }
+    lastAppliedState = darkModeState;
+
+    if (isDark) {
+      applyDarkMode(true);
+    } else {
+      removeDarkMode();
     }
     updateDarkModeButton();
     if (imageStyle) {
@@ -804,11 +813,13 @@ if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
     }
   }
 
+  const STEADY_POLL_INTERVAL_MS = 2000;
+
   function startPeriodicChecking() {
     const fastInterval = setInterval(checkAndApplyDarkMode, 1000 / 5);
     setTimeout(() => {
       clearInterval(fastInterval);
-      setInterval(checkAndApplyDarkMode, 1000 / 2);
+      setInterval(checkAndApplyDarkMode, STEADY_POLL_INTERVAL_MS);
     }, 10000);
   }
 

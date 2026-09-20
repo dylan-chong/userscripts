@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Simple Dark Mode (Invert)
 // @namespace    http://tampermonkey.net/
-// @version      6.2
+// @version      6.3
 // @description  Apply dark mode to websites using color inversion with toggles (requires floating-menu script)
 // @author       You
 // @match        *://*/*
@@ -352,19 +352,28 @@
     darkModeButton.title = getDarkModeTitle(darkModeState);
   }
 
+  let lastAppliedState = null;
+
   function checkAndApplyDarkMode() {
     const darkModeState = getSettings().darkModeState;
+    let isDark;
     if (darkModeState === 'on') {
-      applyDarkMode(true);
+      isDark = true;
     } else if (darkModeState === 'off') {
-      removeDarkMode();
+      isDark = false;
     } else {
-      const alreadyDark = isPageDark();
-      if (alreadyDark) {
-        removeDarkMode();
-      } else {
-        applyDarkMode(true);
-      }
+      isDark = !isPageDark();
+    }
+
+    if (darkModeState === lastAppliedState && isDark === isDarkModeActive()) {
+      return;
+    }
+    lastAppliedState = darkModeState;
+
+    if (isDark) {
+      applyDarkMode(true);
+    } else {
+      removeDarkMode();
     }
     updateDarkModeButton();
     if (imageStyle) {
@@ -372,11 +381,13 @@
     }
   }
 
+  const STEADY_POLL_INTERVAL_MS = 2000;
+
   function startPeriodicChecking() {
     const fastInterval = setInterval(checkAndApplyDarkMode, 1000 / 5);
     setTimeout(() => {
       clearInterval(fastInterval);
-      setInterval(checkAndApplyDarkMode, 1000 / 2);
+      setInterval(checkAndApplyDarkMode, STEADY_POLL_INTERVAL_MS);
     }, 10000);
   }
 
