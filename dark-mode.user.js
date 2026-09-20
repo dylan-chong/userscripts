@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Simple Dark Mode (Invert)
 // @namespace    http://tampermonkey.net/
-// @version      6.3
+// @version      6.4
 // @description  Apply dark mode to websites using color inversion with toggles (requires floating-menu script)
 // @author       You
 // @match        *://*/*
@@ -103,20 +103,102 @@
     return getColorBrightness(style.backgroundColor) ?? getGradientBrightness(style.backgroundImage);
   }
 
-  function getVisibleBrightness(elements) {
+  // Reused offscreen canvas for sampling <img>/<video> pixel content, to
+  // avoid allocating a new canvas on every sample point.
+  let offscreenCanvas = null;
+  function getOffscreenCanvasContext() {
+    if (!offscreenCanvas) {
+      offscreenCanvas = document.createElement('canvas');
+      offscreenCanvas.width = 1;
+      offscreenCanvas.height = 1;
+    }
+    return offscreenCanvas.getContext('2d', { willReadFrequently: true });
+  }
+
+  // Samples the actual rendered pixel under (viewportX, viewportY) for
+  // elements whose visible content is real pixels rather than a CSS
+  // background: <canvas>, <img>, <video>. Returns null (falls back to the
+  // CSS-based heuristic below) when unsupported, not yet loaded, or when
+  // the canvas is "tainted" by cross-origin content without CORS headers —
+  // reading pixels in that case throws a SecurityError, which we catch.
+  //
+  // Known limitation: CSS `background-image: url(...)` (as opposed to a
+  // gradient) on arbitrary elements is not sampled here — doing so would
+  // require loading the image asynchronously, which doesn't fit this
+  // script's synchronous polling design.
+  function sampleElementPixel(el, viewportX, viewportY) {
+    const rect = el.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return null;
+    const relX = viewportX - rect.left;
+    const relY = viewportY - rect.top;
+
+    try {
+      if (el.tagName === 'CANVAS') {
+        const ctx = el.getContext('2d');
+        if (!ctx) return null; // webgl/webgpu canvas, not readable this way
+        const px = Math.floor(relX * (el.width / rect.width));
+        const py = Math.floor(relY * (el.height / rect.height));
+        if (px < 0 || py < 0 || px >= el.width || py >= el.height) return null;
+        const data = ctx.getImageData(px, py, 1, 1).data;
+        return pixelToBrightness(data);
+      }
+
+      let naturalWidth, naturalHeight;
+      if (el.tagName === 'IMG') {
+        naturalWidth = el.naturalWidth;
+        naturalHeight = el.naturalHeight;
+      } else if (el.tagName === 'VIDEO') {
+        naturalWidth = el.videoWidth;
+        naturalHeight = el.videoHeight;
+      } else {
+        return null;
+      }
+      if (!naturalWidth || !naturalHeight) return null; // not loaded yet
+
+      const srcX = Math.floor(relX * (naturalWidth / rect.width));
+      const srcY = Math.floor(relY * (naturalHeight / rect.height));
+      if (srcX < 0 || srcY < 0 || srcX >= naturalWidth || srcY >= naturalHeight) return null;
+
+      const ctx = getOffscreenCanvasContext();
+      ctx.clearRect(0, 0, 1, 1);
+      ctx.drawImage(el, srcX, srcY, 1, 1, 0, 0, 1, 1);
+      const data = ctx.getImageData(0, 0, 1, 1).data;
+      return pixelToBrightness(data);
+    } catch (e) {
+      // Tainted canvas (cross-origin image/video without CORS headers) or
+      // any other read failure — fall back to the CSS-based heuristic.
+      return null;
+    }
+  }
+
+  function pixelToBrightness(data) {
+    const [r, g, b, a] = data;
+    if (a === 0) return null;
+    return { brightness: (r * 299 + g * 587 + b * 114) / 1000, alpha: a / 255 };
+  }
+
+  function getVisibleBrightness(elements, x, y) {
     let compositedBrightness = 0;
     let compositedAlpha = 0;
     const layers = [];
 
     for (const el of elements) {
       const style = window.getComputedStyle(el);
-      const result = getBackgroundBrightness(style);
+      let result = null;
+      let via = 'css';
+      if (el.tagName === 'CANVAS' || el.tagName === 'IMG' || el.tagName === 'VIDEO') {
+        result = sampleElementPixel(el, x, y);
+        if (result) via = 'pixel';
+      }
+      if (!result) {
+        result = getBackgroundBrightness(style);
+      }
       if (!result) continue;
 
       const layerWeight = result.alpha * (1 - compositedAlpha);
       compositedBrightness += result.brightness * layerWeight;
       compositedAlpha += layerWeight;
-      layers.push(`${'  '.repeat(layers.length)}<${el.tagName.toLowerCase()}> bg="${style.backgroundColor}" a=${result.alpha.toFixed(2)} b=${result.brightness.toFixed(0)} cumA=${compositedAlpha.toFixed(2)}`);
+      layers.push(`${'  '.repeat(layers.length)}<${el.tagName.toLowerCase()}> via=${via} a=${result.alpha.toFixed(2)} b=${result.brightness.toFixed(0)} cumA=${compositedAlpha.toFixed(2)}`);
       if (compositedAlpha >= 0.95) {
         return { el, brightness: compositedBrightness / compositedAlpha, layers };
       }
@@ -166,7 +248,7 @@
     samplePoints.forEach(({ x, y }) => {
       const elements = document.elementsFromPoint(x, y);
       if (elements.length > 0) {
-        const result = getVisibleBrightness(elements);
+        const result = getVisibleBrightness(elements, x, y);
         samples.push({ x, y, hitEl: elements[0], ...result });
       }
     });
