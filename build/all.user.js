@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        all-userscripts-bundle
 // @description Combined bundle of all userscripts in this repo (each sub-script only runs on its original matched sites) — install this instead of individual scripts to keep everything updated in one place
-// @version     0.1126
+// @version     0.1130
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -2059,7 +2059,7 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.facebo
       cycles: calculateCycles(pattern),
       currentCycle: 0,
       currentStep: 0,
-      secondsLeft: pattern2.steps[0][1],
+      secondsLeft: pattern.steps[0][1],
       circle: circle,
       instruction: instruction,
       progress: progress,

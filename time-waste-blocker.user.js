@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        time-waste-blocker
 // @description Block or gate time-wasting sites (YouTube, Facebook, Instagram) based on deny/delay/permit categories
-// @version     2.0
+// @version     2.1
 // @match       *://*.youtube.com/*
 // @match       *://*.facebook.com/*
 // @match       *://*.instagram.com/*
@@ -217,7 +217,7 @@
       cycles: calculateCycles(pattern),
       currentCycle: 0,
       currentStep: 0,
-      secondsLeft: pattern2.steps[0][1],
+      secondsLeft: pattern.steps[0][1],
       circle: circle,
       instruction: instruction,
       progress: progress,
