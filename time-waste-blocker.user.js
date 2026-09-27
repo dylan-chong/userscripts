@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        time-waste-blocker
 // @description Block or gate time-wasting sites (YouTube, Facebook, Instagram) based on deny/delay/permit categories
-// @version     2.1
+// @version     2.1.1
 // @match       *://*.youtube.com/*
 // @match       *://*.facebook.com/*
 // @match       *://*.instagram.com/*
@@ -22,7 +22,7 @@
   // so the delay gate only catches the newsfeed/watch/reels time-wasting surfaces.
   const FACEBOOK_PERMITTED_PATH_PATTERNS = [
     /^\/messages\//,
-    /^\/messenger_media$/,
+    /^\/messenger_media/,
   ];
 
   // Direct message URLs on instagram.com are permitted for the same reason.
