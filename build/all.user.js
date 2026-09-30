@@ -2694,7 +2694,14 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href))) return;
         }
     }
 
-    // setInterval(hideSuggestions, 500);
+    function redirectHomepage() {
+        if (window.location.pathname === '/' || window.location.pathname === '/feed') {
+            window.location.replace('https://www.youtube.com/feed/subscriptions');
+        }
+    }
+
+    redirectHomepage();
+    setInterval(hideSuggestions, 500);
 })();
 })();
 
