@@ -1,88 +1,85 @@
 // ==UserScript==
 // @name        time-waste-blocker
-// @description Block or gate time-wasting sites (YouTube, Facebook, Instagram) based on deny/delay/permit categories
-// @version     2.1.2
+// @description Block or gate time-wasting sites (YouTube, Facebook, Instagram, Reddit) based on deny/delay/permit categories
+// @version     2.2.0
 // @match       *://*.youtube.com/*
 // @match       *://*.facebook.com/*
 // @match       *://*.instagram.com/*
+// @match       *://*.reddit.com/*
 // @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/time-waste-blocker.user.js
 // @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/time-waste-blocker.user.js
 // ==/UserScript==
 
 (function () {
-  const SUBSCRIPTIONS_URL = 'https://www.youtube.com/feed/subscriptions';
-  const MEDITATION_VIDEO_URL = 'https://www.youtube.com/watch?v=MK3lB-uY0gE';
+  // Each site entry is generic: the engine below only calls isCurrentSite() and
+  // classify(site) (returning 'deny' | 'delay' | 'permit' | null when not ready yet),
+  // then uses denyUrl, cooldownMs and regateWhileOnPage.
+  const CONFIG = {
+    meditation: {
+      durationS: 5 * 60,
+      videoUrl: 'https://www.youtube.com/watch?v=MK3lB-uY0gE',
+      completionCountdownS: 15,
+      breathingPatterns: [
+        { name: 'Box Breathing', steps: [['Breathe in', 4], ['Hold', 4], ['Breathe out', 4], ['Hold', 4]] },
+        { name: '4-7-8 Breathing', steps: [['Breathe in', 4], ['Hold', 7], ['Breathe out', 8]] },
+        { name: 'Simple Breathing', steps: [['Breathe in', 6], ['Breathe out', 6]] },
+      ],
+    },
+    sites: [
+      {
+        name: 'YouTube',
+        isCurrentSite: function () { return hostEndsWith('youtube.com'); },
+        classify: classifyYoutube,
+        criteria: [
+          { action: 'delay', type: 'channelOrTitle', keywords: ['Naroditsky', 'Loresmith', 'Keyboard', 'Balboa'] },
+          { action: 'permit', type: 'channelOrTitle', keywords: ['Meditation', 'Singing Bowls', 'ASMR', 'Exercise', 'Breathing', 'Mindfulness', 'Workout', 'Visualisation', 'Visualization', "Mind's Eye"] },
+        ],
+        denyUrl: 'https://www.youtube.com/feed/subscriptions',
+        cooldownMs: 45 * 60 * 1000,
+        // Don't interrupt a video that's already playing when the cooldown expires.
+        regateWhileOnPage: false,
+      },
+      {
+        name: 'Facebook',
+        isCurrentSite: function () { return hostEndsWith('facebook.com'); },
+        // Messenger URLs (message threads, media attachments) are permitted so the delay
+        // gate only catches the newsfeed/watch/reels time-wasting surfaces.
+        classify: delayUnlessMatches({ paths: [/^\/messages\//, /^\/messenger_media/] }),
+        denyUrl: null,
+        cooldownMs: 30 * 60 * 1000,
+        regateWhileOnPage: true,
+      },
+      {
+        name: 'Instagram',
+        isCurrentSite: function () { return hostEndsWith('instagram.com'); },
+        classify: delayUnlessMatches({ paths: [/^\/direct\//] }),
+        denyUrl: null,
+        cooldownMs: 20 * 60 * 1000,
+        regateWhileOnPage: true,
+      },
+      {
+        name: 'Reddit',
+        isCurrentSite: function () { return hostEndsWith('reddit.com'); },
+        classify: delayUnlessMatches({ hosts: ['chat.reddit.com'], paths: [/^\/message\//, /^\/chat/] }),
+        denyUrl: null,
+        cooldownMs: 20 * 60 * 1000,
+        regateWhileOnPage: true,
+      },
+    ],
+  };
 
-  const YOUTUBE_CRITERIA = [
-    { action: 'delay', type: 'channelOrTitle', keywords: ['Naroditsky', 'Loresmith', 'Keyboard', 'Balboa'] },
-    { action: 'permit', type: 'channelOrTitle', keywords: ['Meditation', 'Singing Bowls', 'ASMR', 'Exercise', 'Breathing', 'Mindfulness', 'Workout', 'Visualisation', 'Visualization', "Mind's Eye"] },
-  ];
-
-  // Messenger URLs on facebook.com (message threads, media attachments) are permitted
-  // so the delay gate only catches the newsfeed/watch/reels time-wasting surfaces.
-  const FACEBOOK_PERMITTED_PATH_PATTERNS = [
-    /^\/messages\//,
-    /^\/messenger_media/,
-  ];
-
-  // Direct message URLs on instagram.com are permitted for the same reason.
-  const INSTAGRAM_PERMITTED_PATH_PATTERNS = [
-    /^\/direct\//,
-  ];
-
-  const MEDITATION_DURATION_S = 5 * 60;
-  const BREATHING_PATTERNS = [
-    { name: 'Box Breathing', steps: [['Breathe in', 4], ['Hold', 4], ['Breathe out', 4], ['Hold', 4]] },
-    { name: '4-7-8 Breathing', steps: [['Breathe in', 4], ['Hold', 7], ['Breathe out', 8]] },
-    { name: 'Simple Breathing', steps: [['Breathe in', 6], ['Breathe out', 6]] },
-  ];
-
-  const COOLDOWN_MS = 45 * 60 * 1000;
-  const COOLDOWN_STORAGE_KEY = 'yt-time-waste-blocker-last-completed';
-
-  // IndexedDB survives Facebook's random localStorage.clear() calls, unlike localStorage.
-  const IDB_NAME = 'time-waste-blocker-db';
-  const IDB_STORE = 'kv';
-  let dbPromise = null;
-
-  function openDb() {
-    if (!dbPromise) {
-      dbPromise = new Promise(function (resolve, reject) {
-        var req = indexedDB.open(IDB_NAME, 1);
-        req.onupgradeneeded = function () {
-          req.result.createObjectStore(IDB_STORE);
-        };
-        req.onsuccess = function () { resolve(req.result); };
-        req.onerror = function () { reject(req.error); };
-      });
-    }
-    return dbPromise;
+  function hostEndsWith(suffix) {
+    return window.location.hostname.endsWith(suffix);
   }
 
-  async function readCooldown() {
-    try {
-      var db = await openDb();
-      return await new Promise(function (resolve, reject) {
-        var tx = db.transaction(IDB_STORE, 'readonly');
-        var req = tx.objectStore(IDB_STORE).get(COOLDOWN_STORAGE_KEY);
-        req.onsuccess = function () { resolve(parseInt(req.result) || 0); };
-        req.onerror = function () { reject(req.error); };
-      });
-    } catch (e) {
-      return 0;
-    }
+  function delayUnlessMatches({ hosts = [], paths = [] }) {
+    return function () {
+      var hostname = window.location.hostname;
+      var path = window.location.pathname;
+      var isPermitted = hosts.includes(hostname) || paths.some(function (re) { return re.test(path); });
+      return isPermitted ? 'permit' : 'delay';
+    };
   }
-
-  async function writeCooldown(value) {
-    try {
-      var db = await openDb();
-      db.transaction(IDB_STORE, 'readwrite').objectStore(IDB_STORE).put(value, COOLDOWN_STORAGE_KEY);
-    } catch (e) {
-      // Ignore; nothing else to fall back to.
-    }
-  }
-
-  let activeOverlay = null;
 
   function queryFirst(...selectors) {
     for (const s of selectors) {
@@ -132,42 +129,63 @@
     }
   }
 
-  function getYoutubeAction(channel, title) {
-    for (var i = 0; i < YOUTUBE_CRITERIA.length; i++) {
-      if (matchesCriterion(channel, title, YOUTUBE_CRITERIA[i])) return YOUTUBE_CRITERIA[i].action;
+  function classifyYoutube(site) {
+    if (window.location.pathname !== '/watch') return 'permit';
+    var channel = getChannelName();
+    var title = getVideoTitle();
+    if (!channel && !title) return null;
+    for (var i = 0; i < site.criteria.length; i++) {
+      if (matchesCriterion(channel, title, site.criteria[i])) return site.criteria[i].action;
     }
     return 'deny';
   }
 
-  function isWatchPage() {
-    return window.location.pathname === '/watch';
+  const COOLDOWN_STORAGE_KEY = 'yt-time-waste-blocker-last-completed';
+
+  // IndexedDB survives Facebook's random localStorage.clear() calls, unlike localStorage.
+  const IDB_NAME = 'time-waste-blocker-db';
+  const IDB_STORE = 'kv';
+  let dbPromise = null;
+
+  function openDb() {
+    if (!dbPromise) {
+      dbPromise = new Promise(function (resolve, reject) {
+        var req = indexedDB.open(IDB_NAME, 1);
+        req.onupgradeneeded = function () {
+          req.result.createObjectStore(IDB_STORE);
+        };
+        req.onsuccess = function () { resolve(req.result); };
+        req.onerror = function () { reject(req.error); };
+      });
+    }
+    return dbPromise;
   }
 
-  function classifyYoutube() {
-    if (!isWatchPage()) return 'permit';
-    var channel = getChannelName();
-    var title = getVideoTitle();
-    if (!channel && !title) return null;
-    return getYoutubeAction(channel, title);
+  async function readCooldown() {
+    try {
+      var db = await openDb();
+      return await new Promise(function (resolve, reject) {
+        var tx = db.transaction(IDB_STORE, 'readonly');
+        var req = tx.objectStore(IDB_STORE).get(COOLDOWN_STORAGE_KEY);
+        req.onsuccess = function () { resolve(parseInt(req.result) || 0); };
+        req.onerror = function () { reject(req.error); };
+      });
+    } catch (e) {
+      return 0;
+    }
   }
 
-  function makePermittedPathClassifier(permittedPathPatterns) {
-    return function () {
-      var path = window.location.pathname;
-      var isPermitted = permittedPathPatterns.some(function (re) { return re.test(path); });
-      return isPermitted ? 'permit' : 'delay';
-    };
+  async function writeCooldown(value) {
+    try {
+      var db = await openDb();
+      db.transaction(IDB_STORE, 'readwrite').objectStore(IDB_STORE).put(value, COOLDOWN_STORAGE_KEY);
+    } catch (e) {
+      // Ignore; nothing else to fall back to.
+    }
   }
-
-  const SITES = [
-    { hostSuffix: 'youtube.com', classify: classifyYoutube, denyUrl: SUBSCRIPTIONS_URL },
-    { hostSuffix: 'facebook.com', classify: makePermittedPathClassifier(FACEBOOK_PERMITTED_PATH_PATTERNS), denyUrl: null },
-    { hostSuffix: 'instagram.com', classify: makePermittedPathClassifier(INSTAGRAM_PERMITTED_PATH_PATTERNS), denyUrl: null },
-  ];
 
   function getSite() {
-    var hostname = window.location.hostname;
-    return SITES.find(function (site) { return hostname.endsWith(site.hostSuffix); }) || null;
+    return CONFIG.sites.find(function (site) { return site.isCurrentSite(); }) || null;
   }
 
   function pauseVideo() {
@@ -180,37 +198,71 @@
     if (video) video.play();
   }
 
+  // The overlay host lives directly under <html> (Facebook mobile swaps out <body>
+  // children) with !important positioning, and its content sits in a closed shadow root
+  // so page stylesheets can't hide or restyle it.
+  let activeOverlay = null;
+
+  function createOverlayShell() {
+    var host = document.createElement('div');
+    host.id = 'breathing-gate-overlay';
+    [
+      ['all', 'initial'],
+      ['position', 'fixed'],
+      ['inset', '0'],
+      ['z-index', '2147483647'],
+      ['display', 'block'],
+    ].forEach(function ([prop, value]) { host.style.setProperty(prop, value, 'important'); });
+
+    var content = document.createElement('div');
+    content.style.cssText = 'width:100%;height:100%;background:rgba(0,0,0,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;color:#fff;';
+    host.attachShadow({ mode: 'closed' }).appendChild(content);
+
+    document.documentElement.appendChild(host);
+    activeOverlay = host;
+    return content;
+  }
+
+  function ensureOverlayAttached() {
+    if (activeOverlay && !activeOverlay.isConnected) {
+      document.documentElement.appendChild(activeOverlay);
+    }
+  }
+
+  function removeOverlay() {
+    if (activeOverlay) {
+      activeOverlay.remove();
+      activeOverlay = null;
+    }
+  }
+
   // Both the breathing exercise and the post-exercise countdown drive their per-second
   // progress off the single main poll interval below, instead of owning their own timers.
   let breathing = null;
   let completion = null;
 
   function createBreathingOverlay() {
-    var pattern = BREATHING_PATTERNS[Math.floor(Math.random() * BREATHING_PATTERNS.length)];
+    var patterns = CONFIG.meditation.breathingPatterns;
+    var pattern = patterns[Math.floor(Math.random() * patterns.length)];
 
-    var overlay = document.createElement('div');
-    overlay.id = 'breathing-gate-overlay';
-    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;color:#fff;';
+    var content = createOverlayShell();
 
     var title = document.createElement('div');
     title.style.cssText = 'font-size:1.2rem;opacity:0.6;margin-bottom:2rem;';
     title.textContent = pattern.name;
-    overlay.appendChild(title);
+    content.appendChild(title);
 
     var circle = document.createElement('div');
     circle.style.cssText = 'width:120px;height:120px;border-radius:50%;border:3px solid rgba(255,255,255,0.3);transition:transform 1s ease-in-out;margin-bottom:2rem;';
-    overlay.appendChild(circle);
+    content.appendChild(circle);
 
     var instruction = document.createElement('div');
     instruction.style.cssText = 'font-size:2rem;margin-bottom:1rem;min-height:3rem;';
-    overlay.appendChild(instruction);
+    content.appendChild(instruction);
 
     var progress = document.createElement('div');
     progress.style.cssText = 'font-size:1rem;opacity:0.5;margin-bottom:2rem;';
-    overlay.appendChild(progress);
-
-    document.body.appendChild(overlay);
-    activeOverlay = overlay;
+    content.appendChild(progress);
 
     breathing = {
       pattern: pattern,
@@ -221,7 +273,7 @@
       circle: circle,
       instruction: instruction,
       progress: progress,
-      overlay: overlay,
+      content: content,
     };
     updateBreathingDisplay(breathing);
   }
@@ -230,7 +282,7 @@
     const oneCycleDuration = pattern.steps
       .map(([_name, duration]) => duration)
       .reduce((prev, current) => prev + current, 0);
-    const cycles = MEDITATION_DURATION_S / oneCycleDuration;
+    const cycles = CONFIG.meditation.durationS / oneCycleDuration;
     return Math.ceil(cycles);
   }
 
@@ -265,7 +317,7 @@
         b.currentStep = 0;
         b.currentCycle++;
         if (b.currentCycle >= b.cycles) {
-          completeExercise(b.overlay);
+          completeExercise(b.content);
           return;
         }
       }
@@ -274,30 +326,29 @@
     updateBreathingDisplay(b);
   }
 
-  function completeExercise(overlay) {
+  function completeExercise(content) {
     breathing = null;
-    while (overlay.firstChild) overlay.removeChild(overlay.firstChild);
-    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;color:#fff;';
+    while (content.firstChild) content.removeChild(content.firstChild);
 
     var msg = document.createElement('div');
     msg.style.cssText = 'font-size:1.5rem;margin-bottom:2rem;';
     msg.textContent = 'Consider meditating instead';
-    overlay.appendChild(msg);
+    content.appendChild(msg);
 
     var link = document.createElement('a');
-    link.href = MEDITATION_VIDEO_URL;
+    link.href = CONFIG.meditation.videoUrl;
     link.textContent = 'Open singing bowls meditation';
     link.style.cssText = 'color:#7cb3ff;font-size:1.2rem;text-decoration:underline;margin-bottom:2rem;';
-    overlay.appendChild(link);
+    content.appendChild(link);
 
     var countdown = document.createElement('div');
     countdown.style.cssText = 'font-size:1rem;opacity:0.5;';
-    overlay.appendChild(countdown);
+    content.appendChild(countdown);
 
-    var remaining = 15;
+    var remaining = CONFIG.meditation.completionCountdownS;
     countdown.textContent = 'Video available in ' + remaining + 's';
 
-    completion = { overlay: overlay, remaining: remaining, countdown: countdown };
+    completion = { remaining: remaining, countdown: countdown };
   }
 
   function tickCompletion() {
@@ -306,8 +357,7 @@
     if (c.remaining <= 0) {
       completion = null;
       writeCooldown(Date.now());
-      c.overlay.remove();
-      activeOverlay = null;
+      removeOverlay();
       playVideo();
     } else {
       c.countdown.textContent = 'Video available in ' + c.remaining + 's';
@@ -315,22 +365,21 @@
   }
 
   const ACTIVE_CHECK_WINDOW_MS = 30 * 1000;
+  const STEADY_CHECK_INTERVAL_MS = 10 * 1000;
   const CHECK_INTERVAL_MS = 1000;
 
   let lastCheckedUrl = '';
   let activeWindowEndsAt = 0;
+  let lastSteadyCheckAt = 0;
 
   async function runCheck() {
     var site = getSite();
     if (!site) {
-      if (activeOverlay) {
-        activeOverlay.remove();
-        activeOverlay = null;
-      }
+      removeOverlay();
       return;
     }
 
-    var action = site.classify();
+    var action = site.classify(site);
     if (action == null) return;
 
     if (action === 'deny') {
@@ -342,19 +391,19 @@
     // the meditation and updated storage, or a previous poll's value went stale.
     var lastCompletedAt = await readCooldown();
 
-    if (action === 'delay' && (Date.now() - lastCompletedAt > COOLDOWN_MS)) {
+    if (action === 'delay' && (Date.now() - lastCompletedAt > site.cooldownMs)) {
       pauseVideo();
       if (!activeOverlay) {
         createBreathingOverlay();
       }
-    } else if (activeOverlay) {
-      activeOverlay.remove();
-      activeOverlay = null;
+    } else {
+      removeOverlay();
     }
   }
 
   // Single 1s poll drives everything: SPA navigation detection (no popstate on these
-  // sites, with a 30s active window afterwards to catch delayed page loads), the
+  // sites, with a 30s active window afterwards to catch delayed page loads), a slower
+  // steady-state check so an expiring cooldown re-gates on sites that opt in, the
   // breathing exercise countdown, and the post-exercise "video available in Ns" countdown.
   setInterval(function () {
     if (breathing || completion) {
@@ -363,12 +412,10 @@
       if (!getSite()) {
         breathing = null;
         completion = null;
-        if (activeOverlay) {
-          activeOverlay.remove();
-          activeOverlay = null;
-        }
+        removeOverlay();
         return;
       }
+      ensureOverlayAttached();
       if (breathing) {
         tickBreathing();
       } else {
@@ -377,15 +424,30 @@
       return;
     }
 
+    var now = Date.now();
     var urlChanged = window.location.href !== lastCheckedUrl;
     if (urlChanged) {
       lastCheckedUrl = window.location.href;
-      activeWindowEndsAt = Date.now() + ACTIVE_CHECK_WINDOW_MS;
+      activeWindowEndsAt = now + ACTIVE_CHECK_WINDOW_MS;
     }
-    if (urlChanged || Date.now() < activeWindowEndsAt) {
+    if (urlChanged || now < activeWindowEndsAt) {
+      runCheck();
+    } else if (getSite()?.regateWhileOnPage && now - lastSteadyCheckAt >= STEADY_CHECK_INTERVAL_MS) {
+      lastSteadyCheckAt = now;
       runCheck();
     }
   }, CHECK_INTERVAL_MS);
+
+  // Returning to a backgrounded tab (or a bfcache restore) re-checks immediately on
+  // sites that opt in, rather than waiting for the next steady-state poll.
+  function recheckOnReturn() {
+    if (document.hidden || breathing || completion) return;
+    if (!getSite()?.regateWhileOnPage) return;
+    activeWindowEndsAt = Date.now() + ACTIVE_CHECK_WINDOW_MS;
+    runCheck();
+  }
+  document.addEventListener('visibilitychange', recheckOnReturn);
+  window.addEventListener('pageshow', recheckOnReturn);
 
   // Initial page load.
   lastCheckedUrl = window.location.href;
