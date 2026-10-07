@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        floating-menu
 // @description Shared floating button menu for userscripts
-// @version     2.2.0
+// @version     2.2.1
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -230,18 +230,31 @@
     };
   }
 
+  // Some sites (e.g. mobile Facebook) swap out <body> after load, which would
+  // silently drop the menu, so put it back whenever it gets detached.
+  function keepAttached() {
+    setInterval(function () {
+      if (!menuContainer.isConnected && document.body) {
+        document.body.appendChild(menuContainer);
+      }
+    }, 1000);
+  }
+
   function init() {
     loadSettings();
     if (document.body) {
       createUI();
+      keepAttached();
     } else {
       var observer = new MutationObserver(function () {
         if (document.body) {
-          createUI();
           observer.disconnect();
+          createUI();
+          keepAttached();
         }
       });
-      observer.observe(document.documentElement, { childList: true });
+      // Observe document, not documentElement: at document-start <html> may not exist yet.
+      observer.observe(document, { childList: true, subtree: true });
     }
   }
 

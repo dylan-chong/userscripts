@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        dim-mode
 // @description Dim overlay for OLED screens (requires floating-menu script)
-// @version     2.3.2
+// @version     2.3.3
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -94,6 +94,7 @@
         init();
       }
     });
-    observer.observe(document.documentElement, { childList: true });
+    // Observe document, not documentElement: at document-start <html> may not exist yet.
+    observer.observe(document, { childList: true, subtree: true });
   }
 })();

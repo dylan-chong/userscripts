@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Simple Dark Mode (Invert)
 // @namespace    http://tampermonkey.net/
-// @version      6.4
+// @version      6.5
 // @description  Apply dark mode to websites using color inversion with toggles (requires floating-menu script)
 // @author       You
 // @match        *://*/*
@@ -280,7 +280,9 @@
         background-color: #000 !important;
       }
     `;
-    (document.head || document.documentElement).appendChild(preloadDimStyle);
+    // At document-start <html> may not exist yet; skip the preload dim then.
+    var root = document.head || document.documentElement;
+    if (root) root.appendChild(preloadDimStyle);
   }
 
   function removePreloadDim() {
@@ -437,6 +439,8 @@
   let lastAppliedState = null;
 
   function checkAndApplyDarkMode() {
+    // The dark mode <style> goes in <head>; wait for it (the periodic check retries).
+    if (!document.head) return;
     const darkModeState = getSettings().darkModeState;
     let isDark;
     if (darkModeState === 'on') {

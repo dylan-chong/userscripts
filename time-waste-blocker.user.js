@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        time-waste-blocker
 // @description Block or gate time-wasting sites (YouTube, Facebook, Instagram, Reddit) based on deny/delay/permit categories
-// @version     2.2.0
+// @version     2.2.1
 // @match       *://*.youtube.com/*
 // @match       *://*.facebook.com/*
 // @match       *://*.instagram.com/*
@@ -145,6 +145,9 @@
   // IndexedDB survives Facebook's random localStorage.clear() calls, unlike localStorage.
   const IDB_NAME = 'time-waste-blocker-db';
   const IDB_STORE = 'kv';
+  // iOS Safari's indexedDB.open can hang forever when the storage process is cold, so
+  // every access is time-limited and a failed/stuck connection is dropped and reopened.
+  const IDB_TIMEOUT_MS = 1500;
   let dbPromise = null;
 
   function openDb() {
@@ -154,33 +157,50 @@
         req.onupgradeneeded = function () {
           req.result.createObjectStore(IDB_STORE);
         };
-        req.onsuccess = function () { resolve(req.result); };
+        req.onsuccess = function () {
+          var db = req.result;
+          db.onclose = db.onversionchange = function () { dbPromise = null; };
+          resolve(db);
+        };
         req.onerror = function () { reject(req.error); };
       });
     }
     return dbPromise;
   }
 
+  function withTimeout(promise, ms) {
+    return Promise.race([
+      promise,
+      new Promise(function (_resolve, reject) {
+        setTimeout(function () { reject(new Error('IndexedDB timed out')); }, ms);
+      }),
+    ]);
+  }
+
+  // Fails closed: any error or timeout reads as "never completed", so the gate shows.
   async function readCooldown() {
     try {
-      var db = await openDb();
-      return await new Promise(function (resolve, reject) {
-        var tx = db.transaction(IDB_STORE, 'readonly');
-        var req = tx.objectStore(IDB_STORE).get(COOLDOWN_STORAGE_KEY);
-        req.onsuccess = function () { resolve(parseInt(req.result) || 0); };
-        req.onerror = function () { reject(req.error); };
-      });
+      return await withTimeout(openDb().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var tx = db.transaction(IDB_STORE, 'readonly');
+          var req = tx.objectStore(IDB_STORE).get(COOLDOWN_STORAGE_KEY);
+          req.onsuccess = function () { resolve(parseInt(req.result) || 0); };
+          req.onerror = function () { reject(req.error); };
+        });
+      }), IDB_TIMEOUT_MS);
     } catch (e) {
+      dbPromise = null;
       return 0;
     }
   }
 
   async function writeCooldown(value) {
     try {
-      var db = await openDb();
+      var db = await withTimeout(openDb(), IDB_TIMEOUT_MS);
       db.transaction(IDB_STORE, 'readwrite').objectStore(IDB_STORE).put(value, COOLDOWN_STORAGE_KEY);
     } catch (e) {
-      // Ignore; nothing else to fall back to.
+      // Nothing else to fall back to; just make the next access reconnect.
+      dbPromise = null;
     }
   }
 
@@ -373,6 +393,9 @@
   let lastSteadyCheckAt = 0;
 
   async function runCheck() {
+    // At document-start (the bundle's run-at) <html> may not exist yet; the poll retries.
+    if (!document.documentElement) return;
+
     var site = getSite();
     if (!site) {
       removeOverlay();

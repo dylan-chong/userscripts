@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        night-video
 // @description Fullscreen edge-detection filter for OLED night viewing (requires floating-menu script)
-// @version     1.11.0
+// @version     1.11.1
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -246,6 +246,7 @@
         init();
       }
     });
-    observer.observe(document.documentElement, { childList: true });
+    // Observe document, not documentElement: at document-start <html> may not exist yet.
+    observer.observe(document, { childList: true, subtree: true });
   }
 })();

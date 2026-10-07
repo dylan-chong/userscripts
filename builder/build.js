@@ -64,11 +64,17 @@ function wrapWithMatchGuard(script) {
         .map(function (re) { return re.toString() + '.test(location.href)'; })
         .join(' || ');
 
+    // try/catch so a synchronous throw in one sub-script can't stop the rest of the
+    // bundle from running.
     return (
         '// ' + script.fileName + '\n' +
         '(function () {\n' +
         'if (!(' + condition + ')) return;\n' +
+        'try {\n' +
         script.body.replace(/\s+$/, '') + '\n' +
+        '} catch (e) {\n' +
+        '  console.error(' + JSON.stringify('[all-userscripts-bundle] ' + script.fileName + ' failed:') + ', e);\n' +
+        '}\n' +
         '})();\n'
     );
 }

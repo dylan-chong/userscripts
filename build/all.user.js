@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        all-userscripts-bundle
 // @description Combined bundle of all userscripts in this repo (each sub-script only runs on its original matched sites) — install this instead of individual scripts to keep everything updated in one place
-// @version     0.1133
+// @version     0.1136
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -12,6 +12,7 @@
 // floating-menu.user.js
 (function () {
 if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
+try {
 (function () {
   'use strict';
 
@@ -233,28 +234,45 @@ if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
     };
   }
 
+  // Some sites (e.g. mobile Facebook) swap out <body> after load, which would
+  // silently drop the menu, so put it back whenever it gets detached.
+  function keepAttached() {
+    setInterval(function () {
+      if (!menuContainer.isConnected && document.body) {
+        document.body.appendChild(menuContainer);
+      }
+    }, 1000);
+  }
+
   function init() {
     loadSettings();
     if (document.body) {
       createUI();
+      keepAttached();
     } else {
       var observer = new MutationObserver(function () {
         if (document.body) {
-          createUI();
           observer.disconnect();
+          createUI();
+          keepAttached();
         }
       });
-      observer.observe(document.documentElement, { childList: true });
+      // Observe document, not documentElement: at document-start <html> may not exist yet.
+      observer.observe(document, { childList: true, subtree: true });
     }
   }
 
   init();
 })();
+} catch (e) {
+  console.error("[all-userscripts-bundle] floating-menu.user.js failed:", e);
+}
 })();
 
 // chess-quadrant-lines.user.js
 (function () {
 if (!(/^.*:\/\/.*\.chess\.com\/.*$/.test(location.href))) return;
+try {
 (function () {
   const STORAGE_KEY = 'chess_tools_v1';
   const LINE_ID_H = 'quadrant-line-horizontal';
@@ -438,11 +456,15 @@ if (!(/^.*:\/\/.*\.chess\.com\/.*$/.test(location.href))) return;
     observer.observe(document.documentElement, { childList: true });
   }
 })();
+} catch (e) {
+  console.error("[all-userscripts-bundle] chess-quadrant-lines.user.js failed:", e);
+}
 })();
 
 // dark-mode.user.js
 (function () {
 if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
+try {
 (function () {
   'use strict';
 
@@ -712,7 +734,9 @@ if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
         background-color: #000 !important;
       }
     `;
-    (document.head || document.documentElement).appendChild(preloadDimStyle);
+    // At document-start <html> may not exist yet; skip the preload dim then.
+    var root = document.head || document.documentElement;
+    if (root) root.appendChild(preloadDimStyle);
   }
 
   function removePreloadDim() {
@@ -869,6 +893,8 @@ if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
   let lastAppliedState = null;
 
   function checkAndApplyDarkMode() {
+    // The dark mode <style> goes in <head>; wait for it (the periodic check retries).
+    if (!document.head) return;
     const darkModeState = getSettings().darkModeState;
     let isDark;
     if (darkModeState === 'on') {
@@ -909,11 +935,15 @@ if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
 
   window.isPageDark = isPageDark;
 })();
+} catch (e) {
+  console.error("[all-userscripts-bundle] dark-mode.user.js failed:", e);
+}
 })();
 
 // dim-mode.user.js
 (function () {
 if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
+try {
 (function () {
   'use strict';
 
@@ -999,14 +1029,19 @@ if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
         init();
       }
     });
-    observer.observe(document.documentElement, { childList: true });
+    // Observe document, not documentElement: at document-start <html> may not exist yet.
+    observer.observe(document, { childList: true, subtree: true });
   }
 })();
+} catch (e) {
+  console.error("[all-userscripts-bundle] dim-mode.user.js failed:", e);
+}
 })();
 
 // facebook-messenger-no-header.user.js
 (function () {
 if (!(/^.*:\/\/.*\.facebook\.com\/messages\/.*$/.test(location.href))) return;
+try {
 (function () {
     function hideHeader() {
         const header = document.querySelector('nav, [role="banner"]');
@@ -1017,11 +1052,15 @@ if (!(/^.*:\/\/.*\.facebook\.com\/messages\/.*$/.test(location.href))) return;
 
     setInterval(hideHeader, 500);
 })();
+} catch (e) {
+  console.error("[all-userscripts-bundle] facebook-messenger-no-header.user.js failed:", e);
+}
 })();
 
 // github-circleci.user.js
 (function () {
 if (!(/^.*:\/\/github\.com\/.*\/.*$/.test(location.href))) return;
+try {
 (function () {
     function getCircleCIUrl() {
         var match = window.location.pathname.match(/^\/([^/]+)\/([^/]+)(?:\/pull\/(\d+))?/);
@@ -1048,11 +1087,15 @@ if (!(/^.*:\/\/github\.com\/.*\/.*$/.test(location.href))) return;
         }, { group: 'dev', sortKey: 30 });
     }, 100);
 })();
+} catch (e) {
+  console.error("[all-userscripts-bundle] github-circleci.user.js failed:", e);
+}
 })();
 
 // night-video.user.js
 (function () {
 if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
+try {
 (function () {
   'use strict';
 
@@ -1290,14 +1333,19 @@ if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
         init();
       }
     });
-    observer.observe(document.documentElement, { childList: true });
+    // Observe document, not documentElement: at document-start <html> may not exist yet.
+    observer.observe(document, { childList: true, subtree: true });
   }
 })();
+} catch (e) {
+  console.error("[all-userscripts-bundle] night-video.user.js failed:", e);
+}
 })();
 
 // poker-chip-forum-read-listings.user.js
 (function () {
 if (!(/^https:\/\/www\.pokerchipforum\.com\/.*$/.test(location.href))) return;
+try {
 (function() {
   'use strict';
 
@@ -1833,11 +1881,15 @@ if (!(/^https:\/\/www\.pokerchipforum\.com\/.*$/.test(location.href))) return;
   }).observe(document, { subtree: true, childList: true });
 
 })();
+} catch (e) {
+  console.error("[all-userscripts-bundle] poker-chip-forum-read-listings.user.js failed:", e);
+}
 })();
 
 // poker-clock-remove-ui.user.js
 (function () {
 if (!(/^.*:\/\/.*clock\.poker\/.*$/.test(location.href))) return;
+try {
 // TODO doesn't match on website
 
 
@@ -1846,11 +1898,15 @@ setTimeout(() => {
     $('.column h2').remove();
     $('.level-table').style.fontSize = "6vh";   
 }, 2000);
+} catch (e) {
+  console.error("[all-userscripts-bundle] poker-clock-remove-ui.user.js failed:", e);
+}
 })();
 
 // time-waste-blocker.user.js
 (function () {
 if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.facebook\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.instagram\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.reddit\.com\/.*$/.test(location.href))) return;
+try {
 (function () {
   // Each site entry is generic: the engine below only calls isCurrentSite() and
   // classify(site) (returning 'deny' | 'delay' | 'permit' | null when not ready yet),
@@ -1986,6 +2042,9 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.facebo
   // IndexedDB survives Facebook's random localStorage.clear() calls, unlike localStorage.
   const IDB_NAME = 'time-waste-blocker-db';
   const IDB_STORE = 'kv';
+  // iOS Safari's indexedDB.open can hang forever when the storage process is cold, so
+  // every access is time-limited and a failed/stuck connection is dropped and reopened.
+  const IDB_TIMEOUT_MS = 1500;
   let dbPromise = null;
 
   function openDb() {
@@ -1995,33 +2054,50 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.facebo
         req.onupgradeneeded = function () {
           req.result.createObjectStore(IDB_STORE);
         };
-        req.onsuccess = function () { resolve(req.result); };
+        req.onsuccess = function () {
+          var db = req.result;
+          db.onclose = db.onversionchange = function () { dbPromise = null; };
+          resolve(db);
+        };
         req.onerror = function () { reject(req.error); };
       });
     }
     return dbPromise;
   }
 
+  function withTimeout(promise, ms) {
+    return Promise.race([
+      promise,
+      new Promise(function (_resolve, reject) {
+        setTimeout(function () { reject(new Error('IndexedDB timed out')); }, ms);
+      }),
+    ]);
+  }
+
+  // Fails closed: any error or timeout reads as "never completed", so the gate shows.
   async function readCooldown() {
     try {
-      var db = await openDb();
-      return await new Promise(function (resolve, reject) {
-        var tx = db.transaction(IDB_STORE, 'readonly');
-        var req = tx.objectStore(IDB_STORE).get(COOLDOWN_STORAGE_KEY);
-        req.onsuccess = function () { resolve(parseInt(req.result) || 0); };
-        req.onerror = function () { reject(req.error); };
-      });
+      return await withTimeout(openDb().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var tx = db.transaction(IDB_STORE, 'readonly');
+          var req = tx.objectStore(IDB_STORE).get(COOLDOWN_STORAGE_KEY);
+          req.onsuccess = function () { resolve(parseInt(req.result) || 0); };
+          req.onerror = function () { reject(req.error); };
+        });
+      }), IDB_TIMEOUT_MS);
     } catch (e) {
+      dbPromise = null;
       return 0;
     }
   }
 
   async function writeCooldown(value) {
     try {
-      var db = await openDb();
+      var db = await withTimeout(openDb(), IDB_TIMEOUT_MS);
       db.transaction(IDB_STORE, 'readwrite').objectStore(IDB_STORE).put(value, COOLDOWN_STORAGE_KEY);
     } catch (e) {
-      // Ignore; nothing else to fall back to.
+      // Nothing else to fall back to; just make the next access reconnect.
+      dbPromise = null;
     }
   }
 
@@ -2214,6 +2290,9 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.facebo
   let lastSteadyCheckAt = 0;
 
   async function runCheck() {
+    // At document-start (the bundle's run-at) <html> may not exist yet; the poll retries.
+    if (!document.documentElement) return;
+
     var site = getSite();
     if (!site) {
       removeOverlay();
@@ -2295,11 +2374,15 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.facebo
   activeWindowEndsAt = Date.now() + ACTIVE_CHECK_WINDOW_MS;
   runCheck();
 })();
+} catch (e) {
+  console.error("[all-userscripts-bundle] time-waste-blocker.user.js failed:", e);
+}
 })();
 
 // watch-south-park-iframe-popup-blocker.user.js
 (function () {
 if (!(/^https:\/\/myvidplay\.com\/.*$/.test(location.href) || /^https:\/\/.*\.myvidplay\.com\/.*$/.test(location.href))) return;
+try {
 (function() {
   'use strict';
 
@@ -2471,11 +2554,15 @@ if (!(/^https:\/\/myvidplay\.com\/.*$/.test(location.href) || /^https:\/\/.*\.my
 
   console.log('[MyVidPlay] Enhanced Pop-up Blocker active');
 })();
+} catch (e) {
+  console.error("[all-userscripts-bundle] watch-south-park-iframe-popup-blocker.user.js failed:", e);
+}
 })();
 
 // watch-south-park-popup-blocker.user.js
 (function () {
 if (!(/^https:\/\/watchsouthpark\.tv\/.*$/.test(location.href) || /^https:\/\/.*\.watchsouthpark\.tv\/.*$/.test(location.href))) return;
+try {
 (function() {
   'use strict';
 
@@ -2548,11 +2635,15 @@ if (!(/^https:\/\/watchsouthpark\.tv\/.*$/.test(location.href) || /^https:\/\/.*
 
   console.log('South Park TV Pop-up Blocker active');
 })();
+} catch (e) {
+  console.error("[all-userscripts-bundle] watch-south-park-popup-blocker.user.js failed:", e);
+}
 })();
 
 // youtube-block-autoplay.user.js
 (function () {
 if (!(/^.*:\/\/www\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/youtube\.com\/.*$/.test(location.href) || /^.*:\/\/m\.youtube\.com\/.*$/.test(location.href))) return;
+try {
 (function () {
     const BLOCK_AUTOPLAY_BTN_ID = 'yt-block-playlist-autoplay-btn';
     const STORAGE_KEY = 'yt-block-playlist-autoplay';
@@ -2688,11 +2779,15 @@ if (!(/^.*:\/\/www\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/youtube\.
         setupNextButtonTracking();
     }, 250);
 })();
+} catch (e) {
+  console.error("[all-userscripts-bundle] youtube-block-autoplay.user.js failed:", e);
+}
 })();
 
 // youtube-no-comments.user.js
 (function () {
 if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href))) return;
+try {
 (function () {
     function hideComments() {
         document.querySelectorAll(
@@ -2710,11 +2805,15 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href))) return;
 
     setInterval(hideComments, 500);
 })();
+} catch (e) {
+  console.error("[all-userscripts-bundle] youtube-no-comments.user.js failed:", e);
+}
 })();
 
 // youtube-no-subscriptions.user.js
 (function () {
 if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href))) return;
+try {
 const REDIRECT_URL = 'https://www.youtube.com/watch?v=MK3lB-uY0gE';
 
 let lastRedirectedAt = 0;
@@ -2726,11 +2825,15 @@ setInterval(() => {
         lastRedirectedAt = Date.now();
     }
 }, 500);
+} catch (e) {
+  console.error("[all-userscripts-bundle] youtube-no-subscriptions.user.js failed:", e);
+}
 })();
 
 // youtube-no-suggestions.user.js
 (function () {
 if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href))) return;
+try {
 (function () {
     function hideSuggestions() {
         document.querySelectorAll(
@@ -2764,11 +2867,15 @@ if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href))) return;
     redirectHomepage();
     setInterval(hideSuggestions, 500);
 })();
+} catch (e) {
+  console.error("[all-userscripts-bundle] youtube-no-suggestions.user.js failed:", e);
+}
 })();
 
 // youtube-redirect.user.js
 (function () {
 if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href))) return;
+try {
 const getDesiredYoutubeRedirectUrl = () => {
     if (window.location.href.match(/music.youtube.com/)) {
         return;
@@ -2793,4 +2900,7 @@ setInterval(() => {
         lastReplacedYoutubeURLAt = Date.now();
     }
 }, 200);
+} catch (e) {
+  console.error("[all-userscripts-bundle] youtube-redirect.user.js failed:", e);
+}
 })();
