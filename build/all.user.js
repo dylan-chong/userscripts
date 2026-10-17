@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        all-userscripts-bundle
 // @description Combined bundle of all userscripts in this repo (each sub-script only runs on its original matched sites) — install this instead of individual scripts to keep everything updated in one place
-// @version     0.1138
+// @version     0.1140
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -1958,7 +1958,7 @@ try {
 
 // time-waste-blocker.user.js
 (function () {
-if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.facebook\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.instagram\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.reddit\.com\/.*$/.test(location.href))) return;
+if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.facebook\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.instagram\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.reddit\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.apple\.com\/.*$/.test(location.href))) return;
 try {
 (function () {
   // Run once per window (e.g. bundle + individual install).
@@ -2016,6 +2016,14 @@ try {
         name: 'Reddit',
         isCurrentSite: function () { return hostEndsWith('reddit.com'); },
         classify: delayUnlessMatches({ hosts: ['chat.reddit.com'], paths: [/^\/message\//, /^\/chat/] }),
+        denyUrl: null,
+        cooldownMs: 20 * 60 * 1000,
+        regateWhileOnPage: true,
+      },
+      {
+        name: 'Apple',
+        isCurrentSite: function () { return hostEndsWith('apple.com'); },
+        classify: function () { return 'delay'; },
         denyUrl: null,
         cooldownMs: 20 * 60 * 1000,
         regateWhileOnPage: true,

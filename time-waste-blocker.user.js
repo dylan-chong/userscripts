@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name        time-waste-blocker
-// @description Block or gate time-wasting sites (YouTube, Facebook, Instagram, Reddit) based on deny/delay/permit categories
-// @version     2.2.2
+// @description Block or gate time-wasting sites (YouTube, Facebook, Instagram, Reddit, Apple) based on deny/delay/permit categories
+// @version     2.3.0
 // @match       *://*.youtube.com/*
 // @match       *://*.facebook.com/*
 // @match       *://*.instagram.com/*
 // @match       *://*.reddit.com/*
+// @match       *://*.apple.com/*
 // @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/time-waste-blocker.user.js
 // @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/time-waste-blocker.user.js
 // ==/UserScript==
@@ -66,6 +67,14 @@
         name: 'Reddit',
         isCurrentSite: function () { return hostEndsWith('reddit.com'); },
         classify: delayUnlessMatches({ hosts: ['chat.reddit.com'], paths: [/^\/message\//, /^\/chat/] }),
+        denyUrl: null,
+        cooldownMs: 20 * 60 * 1000,
+        regateWhileOnPage: true,
+      },
+      {
+        name: 'Apple',
+        isCurrentSite: function () { return hostEndsWith('apple.com'); },
+        classify: function () { return 'delay'; },
         denyUrl: null,
         cooldownMs: 20 * 60 * 1000,
         regateWhileOnPage: true,
