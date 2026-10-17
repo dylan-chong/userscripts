@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        youtube-block-autoplay
 // @description Block playlist autoplay while allowing manual next
-// @version     1.1
+// @version     1.2
 // @match       *://www.youtube.com/*
 // @match       *://youtube.com/*
 // @match       *://m.youtube.com/*
@@ -10,6 +10,11 @@
 // ==/UserScript==
 
 (function () {
+    // Run once per window (e.g. bundle + individual install).
+    var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+    if (loaded['youtube-block-autoplay']) return;
+    loaded['youtube-block-autoplay'] = true;
+
     const BLOCK_AUTOPLAY_BTN_ID = 'yt-block-playlist-autoplay-btn';
     const STORAGE_KEY = 'yt-block-playlist-autoplay';
     let blockAutoplayEnabled = localStorage.getItem(STORAGE_KEY) !== 'false';

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PokerChipForum Viewed Listings Tracker
 // @namespace    http://tampermonkey.net/
-// @version      2.4
+// @version      2.5
 // @description  Grey out viewed listings on PokerChipForum marketplace with image previews
 // @author       You
 // @match        https://www.pokerchipforum.com/*
@@ -12,6 +12,11 @@
 
 (function() {
   'use strict';
+
+  // Run once per window (e.g. bundle + individual install).
+  var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+  if (loaded['poker-chip-forum-read-listings']) return;
+  loaded['poker-chip-forum-read-listings'] = true;
 
   // Add CSS for viewed and unviewed listings
   function addStyles() {
@@ -489,6 +494,9 @@
       currentUrl.includes('/search');
   }
 
+  // init() re-runs on pageshow and URL changes, so the listener/observer must only start once.
+  let listingWatchersStarted = false;
+
   // Initialize
   function init() {
     addStyles();
@@ -497,6 +505,8 @@
 
     if (isListingPage()) {
       processListings();
+      if (listingWatchersStarted) return;
+      listingWatchersStarted = true;
       trackListingClicks();
 
       const observer = new MutationObserver(function(mutations) {

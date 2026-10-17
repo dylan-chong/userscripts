@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MyVidPlay Pop-up Blocker
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1
 // @description  Aggressive pop-up blocking for myvidplay.com video player
 // @author       You
 // @match        https://myvidplay.com/*
@@ -12,6 +12,11 @@
 
 (function() {
   'use strict';
+
+  // Run once per window (e.g. bundle + individual install).
+  var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+  if (loaded['watch-south-park-iframe-popup-blocker']) return;
+  loaded['watch-south-park-iframe-popup-blocker'] = true;
 
   // Completely disable window.open
   window.open = function() {

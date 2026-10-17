@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        dim-mode
 // @description Dim overlay for OLED screens (requires floating-menu script)
-// @version     2.3.3
+// @version     2.3.4
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -11,6 +11,11 @@
 
 (function () {
   'use strict';
+
+  // Run once per window (e.g. bundle + individual install).
+  var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+  if (loaded['dim-mode']) return;
+  loaded['dim-mode'] = true;
 
   const STORAGE_KEY = 'dim_mode_v1';
   const MODES = [

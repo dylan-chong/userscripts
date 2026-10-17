@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        time-waste-blocker
 // @description Block or gate time-wasting sites (YouTube, Facebook, Instagram, Reddit) based on deny/delay/permit categories
-// @version     2.2.1
+// @version     2.2.2
 // @match       *://*.youtube.com/*
 // @match       *://*.facebook.com/*
 // @match       *://*.instagram.com/*
@@ -11,6 +11,11 @@
 // ==/UserScript==
 
 (function () {
+  // Run once per window (e.g. bundle + individual install).
+  var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+  if (loaded['time-waste-blocker']) return;
+  loaded['time-waste-blocker'] = true;
+
   // Each site entry is generic: the engine below only calls isCurrentSite() and
   // classify(site) (returning 'deny' | 'delay' | 'permit' | null when not ready yet),
   // then uses denyUrl, cooldownMs and regateWhileOnPage.
@@ -413,6 +418,12 @@
     // Re-read every time (not a cached variable) in case another tab/origin completed
     // the meditation and updated storage, or a previous poll's value went stale.
     var lastCompletedAt = await readCooldown();
+
+    // Overlapping checks are possible (the poll is faster than the IndexedDB timeout), so
+    // re-validate rather than act on a stale result: the exercise may have started, or the
+    // page may have changed via SPA navigation, while IndexedDB was read.
+    if (breathing || completion) return;
+    if (getSite() !== site || site.classify(site) !== action) return;
 
     if (action === 'delay' && (Date.now() - lastCompletedAt > site.cooldownMs)) {
       pauseVideo();

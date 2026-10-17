@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        github-circleci
 // @description Add a button to open CircleCI pipeline for the current GitHub repo/PR (requires floating-menu script)
-// @version     1.2
+// @version     1.3
 // @match       *://github.com/*/*
 // @grant       none
 // @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/github-circleci.user.js
@@ -9,6 +9,11 @@
 // ==/UserScript==
 
 (function () {
+    // Run once per window (e.g. bundle + individual install).
+    var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+    if (loaded['github-circleci']) return;
+    loaded['github-circleci'] = true;
+
     function getCircleCIUrl() {
         var match = window.location.pathname.match(/^\/([^/]+)\/([^/]+)(?:\/pull\/(\d+))?/);
         if (!match) return null;
@@ -26,11 +31,10 @@
         if (!window.__userscriptFloatingMenu) return;
         clearInterval(waitForMenu);
 
-        var url = getCircleCIUrl();
-        if (!url) return;
-
+        // Resolve the URL on click, not here: GitHub navigates between repos/PRs without a reload.
         window.__userscriptFloatingMenu.addButton('CI', 'Open CircleCI pipeline', function () {
-            window.open(url, '_blank');
+            var url = getCircleCIUrl();
+            if (url) window.open(url, '_blank');
         }, { group: 'dev', sortKey: 30 });
     }, 100);
 })();

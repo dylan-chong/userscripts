@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        chess-quadrant-lines
 // @description Draw quadrant lines and blur mode for chess.com board (requires floating-menu script)
-// @version     2.1.2
+// @version     2.1.3
 // @match       *://*.chess.com/*
 // @run-at      document-idle
 // @grant       none
@@ -9,6 +9,11 @@
 // @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/chess-quadrant-lines.user.js
 // ==/UserScript==
 (function () {
+  // Run once per window (e.g. bundle + individual install).
+  var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+  if (loaded['chess-quadrant-lines']) return;
+  loaded['chess-quadrant-lines'] = true;
+
   const STORAGE_KEY = 'chess_tools_v1';
   const LINE_ID_H = 'quadrant-line-horizontal';
   const LINE_ID_V = 'quadrant-line-vertical';
@@ -188,6 +193,7 @@
         init();
       }
     });
-    observer.observe(document.documentElement, { childList: true });
+    // Observe document, not documentElement: at document-start <html> may not exist yet.
+    observer.observe(document, { childList: true, subtree: true });
   }
 })();

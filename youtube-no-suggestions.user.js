@@ -1,13 +1,18 @@
 // ==UserScript==
 // @name        youtube-no-suggestions
 // @description Remove all YouTube video suggestions (sidebar, homepage, end screen)
-// @version     1.2
+// @version     1.3
 // @match       *://*.youtube.com/*
 // @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-no-suggestions.user.js
 // @downloadURL https://raw.githubusercontent.com/dylan-chong/userscripts/main/youtube-no-suggestions.user.js
 // ==/UserScript==
 
 (function () {
+    // Run once per window (e.g. bundle + individual install).
+    var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+    if (loaded['youtube-no-suggestions']) return;
+    loaded['youtube-no-suggestions'] = true;
+
     function hideSuggestions() {
         document.querySelectorAll(
             [

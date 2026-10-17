@@ -55,6 +55,14 @@ function parseUserScript(filePath) {
 
     var body = content.slice(content.indexOf(header) + header.length).replace(/^\s*\n/, '');
 
+    // Every script must guard against running twice in one window (e.g. installed both
+    // individually and via this bundle), keyed by its file name.
+    var guardKey = "__userscriptsLoaded = window.__userscriptsLoaded || {};";
+    var guardName = "loaded['" + fileName.replace(/\.user\.js$/, '') + "']";
+    if (body.indexOf(guardKey) === -1 || body.indexOf('if (' + guardName + ') return;') === -1) {
+        throw new Error(fileName + ': missing run-once guard (see any other script for the snippet)');
+    }
+
     return { fileName: fileName, matchPatterns: matchLines, body: body };
 }
 

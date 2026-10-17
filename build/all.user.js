@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        all-userscripts-bundle
 // @description Combined bundle of all userscripts in this repo (each sub-script only runs on its original matched sites) — install this instead of individual scripts to keep everything updated in one place
-// @version     0.1136
+// @version     0.1138
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -15,6 +15,11 @@ if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
 try {
 (function () {
   'use strict';
+
+  // Run once per window (e.g. bundle + individual install).
+  var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+  if (loaded['floating-menu']) return;
+  loaded['floating-menu'] = true;
 
   const domain = window.location.hostname;
   const STORAGE_KEY = `floating_menu_v1_${domain}`;
@@ -274,6 +279,11 @@ try {
 if (!(/^.*:\/\/.*\.chess\.com\/.*$/.test(location.href))) return;
 try {
 (function () {
+  // Run once per window (e.g. bundle + individual install).
+  var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+  if (loaded['chess-quadrant-lines']) return;
+  loaded['chess-quadrant-lines'] = true;
+
   const STORAGE_KEY = 'chess_tools_v1';
   const LINE_ID_H = 'quadrant-line-horizontal';
   const LINE_ID_V = 'quadrant-line-vertical';
@@ -453,7 +463,8 @@ try {
         init();
       }
     });
-    observer.observe(document.documentElement, { childList: true });
+    // Observe document, not documentElement: at document-start <html> may not exist yet.
+    observer.observe(document, { childList: true, subtree: true });
   }
 })();
 } catch (e) {
@@ -467,6 +478,11 @@ if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
 try {
 (function () {
   'use strict';
+
+  // Run once per window (e.g. bundle + individual install).
+  var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+  if (loaded['dark-mode']) return;
+  loaded['dark-mode'] = true;
 
   const domain = window.location.hostname;
   const STORAGE_KEY = `darkmode_v4_${domain}`;
@@ -896,6 +912,8 @@ try {
     // The dark mode <style> goes in <head>; wait for it (the periodic check retries).
     if (!document.head) return;
     const darkModeState = getSettings().darkModeState;
+    // Auto detection samples rendered pixels; before <body> exists every page reads as light.
+    if (darkModeState === 'auto' && !document.body) return;
     let isDark;
     if (darkModeState === 'on') {
       isDark = true;
@@ -946,6 +964,11 @@ if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
 try {
 (function () {
   'use strict';
+
+  // Run once per window (e.g. bundle + individual install).
+  var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+  if (loaded['dim-mode']) return;
+  loaded['dim-mode'] = true;
 
   const STORAGE_KEY = 'dim_mode_v1';
   const MODES = [
@@ -1043,6 +1066,11 @@ try {
 if (!(/^.*:\/\/.*\.facebook\.com\/messages\/.*$/.test(location.href))) return;
 try {
 (function () {
+    // Run once per window (e.g. bundle + individual install).
+    var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+    if (loaded['facebook-messenger-no-header']) return;
+    loaded['facebook-messenger-no-header'] = true;
+
     function hideHeader() {
         const header = document.querySelector('nav, [role="banner"]');
         if (header) {
@@ -1062,6 +1090,11 @@ try {
 if (!(/^.*:\/\/github\.com\/.*\/.*$/.test(location.href))) return;
 try {
 (function () {
+    // Run once per window (e.g. bundle + individual install).
+    var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+    if (loaded['github-circleci']) return;
+    loaded['github-circleci'] = true;
+
     function getCircleCIUrl() {
         var match = window.location.pathname.match(/^\/([^/]+)\/([^/]+)(?:\/pull\/(\d+))?/);
         if (!match) return null;
@@ -1079,11 +1112,10 @@ try {
         if (!window.__userscriptFloatingMenu) return;
         clearInterval(waitForMenu);
 
-        var url = getCircleCIUrl();
-        if (!url) return;
-
+        // Resolve the URL on click, not here: GitHub navigates between repos/PRs without a reload.
         window.__userscriptFloatingMenu.addButton('CI', 'Open CircleCI pipeline', function () {
-            window.open(url, '_blank');
+            var url = getCircleCIUrl();
+            if (url) window.open(url, '_blank');
         }, { group: 'dev', sortKey: 30 });
     }, 100);
 })();
@@ -1098,6 +1130,11 @@ if (!(/^.*:\/\/.*\/.*$/.test(location.href))) return;
 try {
 (function () {
   'use strict';
+
+  // Run once per window (e.g. bundle + individual install).
+  var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+  if (loaded['night-video']) return;
+  loaded['night-video'] = true;
 
   const STORAGE_KEY = 'night_video_v1';
 
@@ -1348,6 +1385,11 @@ if (!(/^https:\/\/www\.pokerchipforum\.com\/.*$/.test(location.href))) return;
 try {
 (function() {
   'use strict';
+
+  // Run once per window (e.g. bundle + individual install).
+  var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+  if (loaded['poker-chip-forum-read-listings']) return;
+  loaded['poker-chip-forum-read-listings'] = true;
 
   // Add CSS for viewed and unviewed listings
   function addStyles() {
@@ -1825,6 +1867,9 @@ try {
       currentUrl.includes('/search');
   }
 
+  // init() re-runs on pageshow and URL changes, so the listener/observer must only start once.
+  let listingWatchersStarted = false;
+
   // Initialize
   function init() {
     addStyles();
@@ -1833,6 +1878,8 @@ try {
 
     if (isListingPage()) {
       processListings();
+      if (listingWatchersStarted) return;
+      listingWatchersStarted = true;
       trackListingClicks();
 
       const observer = new MutationObserver(function(mutations) {
@@ -1892,12 +1939,18 @@ if (!(/^.*:\/\/.*clock\.poker\/.*$/.test(location.href))) return;
 try {
 // TODO doesn't match on website
 
+(function () {
+    // Run once per window (e.g. bundle + individual install).
+    var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+    if (loaded['poker-clock-remove-ui']) return;
+    loaded['poker-clock-remove-ui'] = true;
 
-setTimeout(() => {
-    $('.title-container').style.display = 'none';
-    $('.column h2').remove();
-    $('.level-table').style.fontSize = "6vh";   
-}, 2000);
+    setTimeout(() => {
+        $('.title-container').style.display = 'none';
+        $('.column h2').remove();
+        $('.level-table').style.fontSize = "6vh";   
+    }, 2000);
+})();
 } catch (e) {
   console.error("[all-userscripts-bundle] poker-clock-remove-ui.user.js failed:", e);
 }
@@ -1908,6 +1961,11 @@ setTimeout(() => {
 if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.facebook\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.instagram\.com\/.*$/.test(location.href) || /^.*:\/\/.*\.reddit\.com\/.*$/.test(location.href))) return;
 try {
 (function () {
+  // Run once per window (e.g. bundle + individual install).
+  var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+  if (loaded['time-waste-blocker']) return;
+  loaded['time-waste-blocker'] = true;
+
   // Each site entry is generic: the engine below only calls isCurrentSite() and
   // classify(site) (returning 'deny' | 'delay' | 'permit' | null when not ready yet),
   // then uses denyUrl, cooldownMs and regateWhileOnPage.
@@ -2311,6 +2369,12 @@ try {
     // the meditation and updated storage, or a previous poll's value went stale.
     var lastCompletedAt = await readCooldown();
 
+    // Overlapping checks are possible (the poll is faster than the IndexedDB timeout), so
+    // re-validate rather than act on a stale result: the exercise may have started, or the
+    // page may have changed via SPA navigation, while IndexedDB was read.
+    if (breathing || completion) return;
+    if (getSite() !== site || site.classify(site) !== action) return;
+
     if (action === 'delay' && (Date.now() - lastCompletedAt > site.cooldownMs)) {
       pauseVideo();
       if (!activeOverlay) {
@@ -2385,6 +2449,11 @@ if (!(/^https:\/\/myvidplay\.com\/.*$/.test(location.href) || /^https:\/\/.*\.my
 try {
 (function() {
   'use strict';
+
+  // Run once per window (e.g. bundle + individual install).
+  var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+  if (loaded['watch-south-park-iframe-popup-blocker']) return;
+  loaded['watch-south-park-iframe-popup-blocker'] = true;
 
   // Completely disable window.open
   window.open = function() {
@@ -2566,6 +2635,11 @@ try {
 (function() {
   'use strict';
 
+  // Run once per window (e.g. bundle + individual install).
+  var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+  if (loaded['watch-south-park-popup-blocker']) return;
+  loaded['watch-south-park-popup-blocker'] = true;
+
   // Prevent new tabs/windows from opening
   function blockPopups() {
     // Override window.open
@@ -2627,8 +2701,8 @@ try {
     });
   });
 
-  // Start observing
-  observer.observe(document.body || document.documentElement, {
+  // Observe document, not body/documentElement: at document-start <html> may not exist yet.
+  observer.observe(document, {
     childList: true,
     subtree: true
   });
@@ -2645,6 +2719,11 @@ try {
 if (!(/^.*:\/\/www\.youtube\.com\/.*$/.test(location.href) || /^.*:\/\/youtube\.com\/.*$/.test(location.href) || /^.*:\/\/m\.youtube\.com\/.*$/.test(location.href))) return;
 try {
 (function () {
+    // Run once per window (e.g. bundle + individual install).
+    var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+    if (loaded['youtube-block-autoplay']) return;
+    loaded['youtube-block-autoplay'] = true;
+
     const BLOCK_AUTOPLAY_BTN_ID = 'yt-block-playlist-autoplay-btn';
     const STORAGE_KEY = 'yt-block-playlist-autoplay';
     let blockAutoplayEnabled = localStorage.getItem(STORAGE_KEY) !== 'false';
@@ -2789,6 +2868,11 @@ try {
 if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href))) return;
 try {
 (function () {
+    // Run once per window (e.g. bundle + individual install).
+    var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+    if (loaded['youtube-no-comments']) return;
+    loaded['youtube-no-comments'] = true;
+
     function hideComments() {
         document.querySelectorAll(
             'ytd-comments#comments, ytm-comment-section-renderer, #comment-teaser, ytm-engagement-panel-section-list-renderer[target-id="comment-item-section"]'
@@ -2814,17 +2898,24 @@ try {
 (function () {
 if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href))) return;
 try {
-const REDIRECT_URL = 'https://www.youtube.com/watch?v=MK3lB-uY0gE';
+(function () {
+    // Run once per window (e.g. bundle + individual install).
+    var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+    if (loaded['youtube-no-subscriptions']) return;
+    loaded['youtube-no-subscriptions'] = true;
 
-let lastRedirectedAt = 0;
+    const REDIRECT_URL = 'https://www.youtube.com/watch?v=MK3lB-uY0gE';
 
-setInterval(() => {
-    const isSubscriptionsPage = window.location.href.match(/youtube\.com\/feed\/subscriptions/);
-    if (isSubscriptionsPage && Date.now() - lastRedirectedAt > 2000) {
-        window.location.replace(REDIRECT_URL);
-        lastRedirectedAt = Date.now();
-    }
-}, 500);
+    let lastRedirectedAt = 0;
+
+    setInterval(() => {
+        const isSubscriptionsPage = window.location.href.match(/youtube\.com\/feed\/subscriptions/);
+        if (isSubscriptionsPage && Date.now() - lastRedirectedAt > 2000) {
+            window.location.replace(REDIRECT_URL);
+            lastRedirectedAt = Date.now();
+        }
+    }, 500);
+})();
 } catch (e) {
   console.error("[all-userscripts-bundle] youtube-no-subscriptions.user.js failed:", e);
 }
@@ -2835,6 +2926,11 @@ setInterval(() => {
 if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href))) return;
 try {
 (function () {
+    // Run once per window (e.g. bundle + individual install).
+    var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+    if (loaded['youtube-no-suggestions']) return;
+    loaded['youtube-no-suggestions'] = true;
+
     function hideSuggestions() {
         document.querySelectorAll(
             [
@@ -2876,30 +2972,37 @@ try {
 (function () {
 if (!(/^.*:\/\/.*\.youtube\.com\/.*$/.test(location.href))) return;
 try {
-const getDesiredYoutubeRedirectUrl = () => {
-    if (window.location.href.match(/music.youtube.com/)) {
-        return;
-    }
+(function () {
+    // Run once per window (e.g. bundle + individual install).
+    var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+    if (loaded['youtube-redirect']) return;
+    loaded['youtube-redirect'] = true;
 
-    if (window.location.href.match(/youtube.com\/?$/)) {
-        return 'https://www.youtube.com/feed/subscriptions';
-    }
+    const getDesiredYoutubeRedirectUrl = () => {
+        if (window.location.href.match(/music.youtube.com/)) {
+            return;
+        }
 
-    const shortsMatch = window.location.href.match(/.*youtube.com\/shorts\/(.*)?$/)
-    if (shortsMatch) {
-        const shortId = shortsMatch[1];
-        return window.location.href.replace('shorts/', 'watch?v=');
-    }
-}
-let lastReplacedYoutubeURLAt = 0;
+        if (window.location.href.match(/youtube.com\/?$/)) {
+            return 'https://www.youtube.com/feed/subscriptions';
+        }
 
-setInterval(() => {
-    const desiredUrl = getDesiredYoutubeRedirectUrl();
-    if (desiredUrl && window.location.href !== desiredUrl && Date.now() - lastReplacedYoutubeURLAt > 2000) {
-        window.location.replace(desiredUrl);
-        lastReplacedYoutubeURLAt = Date.now();
+        const shortsMatch = window.location.href.match(/.*youtube.com\/shorts\/(.*)?$/)
+        if (shortsMatch) {
+            const shortId = shortsMatch[1];
+            return window.location.href.replace('shorts/', 'watch?v=');
+        }
     }
-}, 200);
+    let lastReplacedYoutubeURLAt = 0;
+
+    setInterval(() => {
+        const desiredUrl = getDesiredYoutubeRedirectUrl();
+        if (desiredUrl && window.location.href !== desiredUrl && Date.now() - lastReplacedYoutubeURLAt > 2000) {
+            window.location.replace(desiredUrl);
+            lastReplacedYoutubeURLAt = Date.now();
+        }
+    }, 200);
+})();
 } catch (e) {
   console.error("[all-userscripts-bundle] youtube-redirect.user.js failed:", e);
 }

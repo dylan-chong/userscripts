@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        night-video
 // @description Fullscreen edge-detection filter for OLED night viewing (requires floating-menu script)
-// @version     1.11.1
+// @version     1.11.2
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -11,6 +11,11 @@
 
 (function () {
   'use strict';
+
+  // Run once per window (e.g. bundle + individual install).
+  var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+  if (loaded['night-video']) return;
+  loaded['night-video'] = true;
 
   const STORAGE_KEY = 'night_video_v1';
 

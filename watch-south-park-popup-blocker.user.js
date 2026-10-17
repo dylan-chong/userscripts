@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         South Park TV Pop-up Blocker
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.2
 // @description  Prevents new tabs/windows from opening on watchsouthpark.tv
 // @author       You
 // @match        https://watchsouthpark.tv/*
@@ -14,6 +14,11 @@
 
 (function() {
   'use strict';
+
+  // Run once per window (e.g. bundle + individual install).
+  var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+  if (loaded['watch-south-park-popup-blocker']) return;
+  loaded['watch-south-park-popup-blocker'] = true;
 
   // Prevent new tabs/windows from opening
   function blockPopups() {
@@ -76,8 +81,8 @@
     });
   });
 
-  // Start observing
-  observer.observe(document.body || document.documentElement, {
+  // Observe document, not body/documentElement: at document-start <html> may not exist yet.
+  observer.observe(document, {
     childList: true,
     subtree: true
   });

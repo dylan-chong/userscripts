@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        floating-menu
 // @description Shared floating button menu for userscripts
-// @version     2.2.1
+// @version     2.2.2
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -11,6 +11,11 @@
 
 (function () {
   'use strict';
+
+  // Run once per window (e.g. bundle + individual install).
+  var loaded = window.__userscriptsLoaded = window.__userscriptsLoaded || {};
+  if (loaded['floating-menu']) return;
+  loaded['floating-menu'] = true;
 
   const domain = window.location.hostname;
   const STORAGE_KEY = `floating_menu_v1_${domain}`;
