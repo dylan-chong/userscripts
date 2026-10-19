@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        all-userscripts-bundle
 // @description Combined bundle of all userscripts in this repo (each sub-script only runs on its original matched sites) — install this instead of individual scripts to keep everything updated in one place
-// @version     0.1140
+// @version     0.1142
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -436,11 +436,11 @@ try {
       return true;
     }
 
-    if (!doRegister()) {
-      var poll = setInterval(function () {
-        if (doRegister()) clearInterval(poll);
-      }, 200);
-    }
+    // Chained setTimeout, not setInterval: clearInterval doesn't stop intervals on Facebook,
+    // which left this poll adding duplicate menu buttons forever.
+    (function poll() {
+      if (!doRegister()) setTimeout(poll, 200);
+    })();
   }
 
   function init() {
@@ -886,11 +886,12 @@ try {
     loadSettings();
     applyPreloadDim();
 
-    var waitForMenu = setInterval(function () {
-      if (!window.__userscriptFloatingMenu) return;
-      clearInterval(waitForMenu);
-      registerMenuButtons();
-    }, 100);
+    // Chained setTimeout, not setInterval: clearInterval doesn't stop intervals on Facebook,
+    // which left this poll adding duplicate menu buttons forever.
+    (function waitForMenu() {
+      if (window.__userscriptFloatingMenu) registerMenuButtons();
+      else setTimeout(waitForMenu, 100);
+    })();
 
     setTimeout(function () {
       removePreloadDim();
@@ -941,12 +942,15 @@ try {
 
   const STEADY_POLL_INTERVAL_MS = 2000;
 
+  // Chained setTimeout rather than clearInterval, which doesn't work on Facebook.
   function startPeriodicChecking() {
-    const fastInterval = setInterval(checkAndApplyDarkMode, 1000 / 5);
-    setTimeout(() => {
-      clearInterval(fastInterval);
-      setInterval(checkAndApplyDarkMode, STEADY_POLL_INTERVAL_MS);
-    }, 10000);
+    const fastUntil = Date.now() + 10000;
+    (function scheduleCheck() {
+      setTimeout(function () {
+        checkAndApplyDarkMode();
+        scheduleCheck();
+      }, Date.now() < fastUntil ? 1000 / 5 : STEADY_POLL_INTERVAL_MS);
+    })();
   }
 
   init();
@@ -1028,9 +1032,12 @@ try {
 
   function init() {
     loadMode();
-    var poll = setInterval(function () {
-      if (window.__userscriptFloatingMenu) {
-        clearInterval(poll);
+    // Chained setTimeout, not setInterval: clearInterval doesn't stop intervals on Facebook,
+    // which left this poll adding duplicate menu buttons forever.
+    (function poll() {
+      if (!window.__userscriptFloatingMenu) {
+        setTimeout(poll, 100);
+      } else {
         var mode = MODES[modeIndex];
         button = window.__userscriptFloatingMenu.addButton(
           mode.label,
@@ -1040,7 +1047,7 @@ try {
         );
         applyMode();
       }
-    }, 100);
+    })();
   }
 
   if (document.body) {
@@ -1108,16 +1115,20 @@ try {
         return url;
     }
 
-    var waitForMenu = setInterval(function () {
-        if (!window.__userscriptFloatingMenu) return;
-        clearInterval(waitForMenu);
+    // Chained setTimeout, not setInterval: clearInterval doesn't stop intervals on Facebook,
+    // which left this poll adding duplicate menu buttons forever.
+    (function waitForMenu() {
+        if (!window.__userscriptFloatingMenu) {
+            setTimeout(waitForMenu, 100);
+            return;
+        }
 
         // Resolve the URL on click, not here: GitHub navigates between repos/PRs without a reload.
         window.__userscriptFloatingMenu.addButton('CI', 'Open CircleCI pipeline', function () {
             var url = getCircleCIUrl();
             if (url) window.open(url, '_blank');
         }, { group: 'dev', sortKey: 30 });
-    }, 100);
+    })();
 })();
 } catch (e) {
   console.error("[all-userscripts-bundle] github-circleci.user.js failed:", e);
@@ -1347,9 +1358,12 @@ try {
 
   function init() {
     loadState();
-    var poll = setInterval(function () {
-      if (window.__userscriptFloatingMenu) {
-        clearInterval(poll);
+    // Chained setTimeout, not setInterval: clearInterval doesn't stop intervals on Facebook,
+    // which left this poll adding duplicate menu buttons forever.
+    (function poll() {
+      if (!window.__userscriptFloatingMenu) {
+        setTimeout(poll, 100);
+      } else {
         button = window.__userscriptFloatingMenu.addButton(
           '📺',
           filterTitle(FILTERS[filterIndex]),
@@ -1358,7 +1372,7 @@ try {
         );
         apply();
       }
-    }, 100);
+    })();
   }
 
   if (document.body) {

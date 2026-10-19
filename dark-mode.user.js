@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Simple Dark Mode (Invert)
 // @namespace    http://tampermonkey.net/
-// @version      6.6
+// @version      6.7
 // @description  Apply dark mode to websites using color inversion with toggles (requires floating-menu script)
 // @author       You
 // @match        *://*/*
@@ -421,11 +421,12 @@
     loadSettings();
     applyPreloadDim();
 
-    var waitForMenu = setInterval(function () {
-      if (!window.__userscriptFloatingMenu) return;
-      clearInterval(waitForMenu);
-      registerMenuButtons();
-    }, 100);
+    // Chained setTimeout, not setInterval: clearInterval doesn't stop intervals on Facebook,
+    // which left this poll adding duplicate menu buttons forever.
+    (function waitForMenu() {
+      if (window.__userscriptFloatingMenu) registerMenuButtons();
+      else setTimeout(waitForMenu, 100);
+    })();
 
     setTimeout(function () {
       removePreloadDim();
@@ -476,12 +477,15 @@
 
   const STEADY_POLL_INTERVAL_MS = 2000;
 
+  // Chained setTimeout rather than clearInterval, which doesn't work on Facebook.
   function startPeriodicChecking() {
-    const fastInterval = setInterval(checkAndApplyDarkMode, 1000 / 5);
-    setTimeout(() => {
-      clearInterval(fastInterval);
-      setInterval(checkAndApplyDarkMode, STEADY_POLL_INTERVAL_MS);
-    }, 10000);
+    const fastUntil = Date.now() + 10000;
+    (function scheduleCheck() {
+      setTimeout(function () {
+        checkAndApplyDarkMode();
+        scheduleCheck();
+      }, Date.now() < fastUntil ? 1000 / 5 : STEADY_POLL_INTERVAL_MS);
+    })();
   }
 
   init();

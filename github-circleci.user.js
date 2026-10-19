@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        github-circleci
 // @description Add a button to open CircleCI pipeline for the current GitHub repo/PR (requires floating-menu script)
-// @version     1.3
+// @version     1.4
 // @match       *://github.com/*/*
 // @grant       none
 // @updateURL   https://raw.githubusercontent.com/dylan-chong/userscripts/main/github-circleci.user.js
@@ -27,14 +27,18 @@
         return url;
     }
 
-    var waitForMenu = setInterval(function () {
-        if (!window.__userscriptFloatingMenu) return;
-        clearInterval(waitForMenu);
+    // Chained setTimeout, not setInterval: clearInterval doesn't stop intervals on Facebook,
+    // which left this poll adding duplicate menu buttons forever.
+    (function waitForMenu() {
+        if (!window.__userscriptFloatingMenu) {
+            setTimeout(waitForMenu, 100);
+            return;
+        }
 
         // Resolve the URL on click, not here: GitHub navigates between repos/PRs without a reload.
         window.__userscriptFloatingMenu.addButton('CI', 'Open CircleCI pipeline', function () {
             var url = getCircleCIUrl();
             if (url) window.open(url, '_blank');
         }, { group: 'dev', sortKey: 30 });
-    }, 100);
+    })();
 })();

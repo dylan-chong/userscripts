@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        chess-quadrant-lines
 // @description Draw quadrant lines and blur mode for chess.com board (requires floating-menu script)
-// @version     2.1.3
+// @version     2.1.4
 // @match       *://*.chess.com/*
 // @run-at      document-idle
 // @grant       none
@@ -166,11 +166,11 @@
       return true;
     }
 
-    if (!doRegister()) {
-      var poll = setInterval(function () {
-        if (doRegister()) clearInterval(poll);
-      }, 200);
-    }
+    // Chained setTimeout, not setInterval: clearInterval doesn't stop intervals on Facebook,
+    // which left this poll adding duplicate menu buttons forever.
+    (function poll() {
+      if (!doRegister()) setTimeout(poll, 200);
+    })();
   }
 
   function init() {

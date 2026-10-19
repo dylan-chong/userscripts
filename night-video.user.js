@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        night-video
 // @description Fullscreen edge-detection filter for OLED night viewing (requires floating-menu script)
-// @version     1.11.2
+// @version     1.11.3
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -228,9 +228,12 @@
 
   function init() {
     loadState();
-    var poll = setInterval(function () {
-      if (window.__userscriptFloatingMenu) {
-        clearInterval(poll);
+    // Chained setTimeout, not setInterval: clearInterval doesn't stop intervals on Facebook,
+    // which left this poll adding duplicate menu buttons forever.
+    (function poll() {
+      if (!window.__userscriptFloatingMenu) {
+        setTimeout(poll, 100);
+      } else {
         button = window.__userscriptFloatingMenu.addButton(
           '📺',
           filterTitle(FILTERS[filterIndex]),
@@ -239,7 +242,7 @@
         );
         apply();
       }
-    }, 100);
+    })();
   }
 
   if (document.body) {

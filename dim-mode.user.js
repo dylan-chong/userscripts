@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        dim-mode
 // @description Dim overlay for OLED screens (requires floating-menu script)
-// @version     2.3.4
+// @version     2.3.5
 // @match       *://*/*
 // @run-at      document-start
 // @grant       none
@@ -75,9 +75,12 @@
 
   function init() {
     loadMode();
-    var poll = setInterval(function () {
-      if (window.__userscriptFloatingMenu) {
-        clearInterval(poll);
+    // Chained setTimeout, not setInterval: clearInterval doesn't stop intervals on Facebook,
+    // which left this poll adding duplicate menu buttons forever.
+    (function poll() {
+      if (!window.__userscriptFloatingMenu) {
+        setTimeout(poll, 100);
+      } else {
         var mode = MODES[modeIndex];
         button = window.__userscriptFloatingMenu.addButton(
           mode.label,
@@ -87,7 +90,7 @@
         );
         applyMode();
       }
-    }, 100);
+    })();
   }
 
   if (document.body) {
